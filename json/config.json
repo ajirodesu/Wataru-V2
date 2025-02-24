@@ -1,0 +1,13 @@
+{
+  "allowInbox": true,
+  "devMode": true,
+  "adminOnly": false,
+  "timeZone": "Asia/Manila",
+  "token": "6480327163:AAEne2GUYc6OXhWGEBi90Ug5NS4K8I3nRtk",
+  "prefix": "/",
+  "symbols": "●",
+  "owner": "Lance Ajiro",
+  "admin": [
+    "6488288986"
+  ]
+}
