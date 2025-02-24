@@ -5,11 +5,13 @@ const path = require("path");
 const fs = require("fs");
 
 // Constants
-const REPO_URL = "https://github.com/ajirodesu/wataru.git";
+const REPO_URL = "https://github.com/ajirodesu/wataru-v2.git";
 const PROJECT_DIR = path.resolve(__dirname);
 const SETUP_DIR = path.join(PROJECT_DIR, "json");
+const DB_PATH = path.join(PROJECT_DIR, "system", "database", "wataru.db");
 const BACKUP_DIR = path.join(PROJECT_DIR, "backups");
 const TEMP_SETUP_BACKUP = path.join(BACKUP_DIR, `setup_backup_${Date.now()}`);
+const TEMP_DB_BACKUP = path.join(BACKUP_DIR, `db_backup_${Date.now()}`);
 
 /**
  * Executes a shell command with error handling and logging.
@@ -45,7 +47,7 @@ function isGitInstalled() {
 }
 
 /**
- * Updates the bot to the latest version from GitHub, preserving the setup folder and its contents.
+ * Updates the bot to the latest version from GitHub, preserving the setup folder and wataru.db.
  * @returns {Promise<void>} Resolves when update completes successfully.
  */
 async function updateBot() {
@@ -59,7 +61,7 @@ async function updateBot() {
 
     // Ensure backup directory exists
     if (!fs.existsSync(BACKUP_DIR)) {
-      fs.mkdirSync(BACKUP_DIR);
+      fs.mkdirSync(BACKUP_DIR, { recursive: true });
       console.log(`[INFO] Created backups directory: ${BACKUP_DIR}`);
     }
 
@@ -71,6 +73,16 @@ async function updateBot() {
       setupBackedUp = true;
     } else {
       console.log("[INFO] No setup folder found to back up.");
+    }
+
+    // Backup the wataru.db file if it exists
+    let dbBackedUp = false;
+    if (fs.existsSync(DB_PATH)) {
+      fs.copyFileSync(DB_PATH, TEMP_DB_BACKUP);
+      console.log(`[INFO] Backed up wataru.db to ${TEMP_DB_BACKUP}`);
+      dbBackedUp = true;
+    } else {
+      console.log("[INFO] No wataru.db file found to back up.");
     }
 
     // Ensure git is initialized
@@ -88,7 +100,7 @@ async function updateBot() {
       "Failed to set Git remote origin"
     );
 
-    // Fetch and pull the latest changes (setup/ may be overwritten)
+    // Fetch and pull the latest changes (setup/ and wataru.db may be overwritten)
     runCommand("git fetch origin", "Failed to fetch from remote repository");
     runCommand(
       "git reset --hard origin/main",
@@ -103,6 +115,13 @@ async function updateBot() {
       console.log(`[INFO] Restored original setup folder from ${TEMP_SETUP_BACKUP}`);
     }
 
+    // Restore the wataru.db file from backup if it was backed up
+    if (dbBackedUp) {
+      fs.copyFileSync(TEMP_DB_BACKUP, DB_PATH); // Restore original DB
+      fs.rmSync(TEMP_DB_BACKUP, { force: true }); // Clean up backup
+      console.log(`[INFO] Restored original wataru.db from ${TEMP_DB_BACKUP}`);
+    }
+
     // Install dependencies with fallback
     try {
       runCommand("npm install", "Failed to install NPM dependencies");
@@ -113,10 +132,14 @@ async function updateBot() {
     console.log("[INFO] Bot updated successfully.");
   } catch (error) {
     console.error(`[ERROR] Update process failed: ${error.message}`);
-    // Clean up backup if it exists
+    // Clean up backups if they exist
     if (fs.existsSync(TEMP_SETUP_BACKUP)) {
       fs.rmSync(TEMP_SETUP_BACKUP, { recursive: true, force: true });
-      console.log(`[INFO] Cleaned up temporary backup: ${TEMP_SETUP_BACKUP}`);
+      console.log(`[INFO] Cleaned up temporary setup backup: ${TEMP_SETUP_BACKUP}`);
+    }
+    if (fs.existsSync(TEMP_DB_BACKUP)) {
+      fs.rmSync(TEMP_DB_BACKUP, { force: true });
+      console.log(`[INFO] Cleaned up temporary DB backup: ${TEMP_DB_BACKUP}`);
     }
     throw error; // Propagate to caller
   }
