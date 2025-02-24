@@ -2,12 +2,12 @@
   "allowInbox": true,
   "devMode": true,
   "adminOnly": false,
-  "timeZone": "Asia/Manila",
-  "token": "6480327163:AAEne2GUYc6OXhWGEBi90Ug5NS4K8I3nRtk",
-  "prefix": "/",
+  "timeZone": "your_timezone", //example Asia/Manila
+  "token": "your_bot_token",
+  "prefix": "your_bot_prefix",
   "symbols": "●",
-  "owner": "Lance Ajiro",
+  "owner": "your_name",
   "admin": [
-    "6488288986"
+    "your_telegram-id"
   ]
 }
