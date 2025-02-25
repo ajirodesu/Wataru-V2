@@ -12,7 +12,7 @@ const db = new sqlite3.Database(dbFilePath, (err) => {
 
 // Create 2 tables: one for users and one for groups.
 db.serialize(() => {
-  // Users table: stores complete user data along with coin_balance, rank_value, and banned status.
+  // Users table: now includes level and message_count for rankup.
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       user_id INTEGER PRIMARY KEY,
@@ -22,13 +22,13 @@ db.serialize(() => {
       language_code TEXT,
       is_bot INTEGER,
       coin_balance INTEGER DEFAULT 0,
-      rank_value TEXT DEFAULT '',
+      level INTEGER DEFAULT 1,
+      message_count INTEGER DEFAULT 0,
       banned INTEGER DEFAULT 0
     )
   `);
 
-  // Groups table: stores group data including rules, custom prefix,
-  // banned status, and admin-only settings.
+  // Groups table.
   db.run(`
     CREATE TABLE IF NOT EXISTS groups (
       group_id INTEGER PRIMARY KEY,
@@ -200,12 +200,21 @@ async function coinData() {
 /*============================
   RANK FUNCTIONS
 ============================*/
-// Retrieve rank data.
+// Retrieve rank data (returns user_id, level, and message_count).
 async function rankData() {
   try {
-    return await allQuery("SELECT user_id, rank_value FROM users", []);
+    return await allQuery("SELECT user_id, level, message_count FROM users", []);
   } catch (error) {
     console.error("Error retrieving rank data:", error);
+  }
+}
+
+// Helper: update a user’s level and message count.
+async function updateUserRank(userId, newLevel, newMessageCount) {
+  try {
+    await runQuery("UPDATE users SET level = ?, message_count = ? WHERE user_id = ?", [newLevel, newMessageCount, userId]);
+  } catch (error) {
+    console.error("Error updating user rank:", error);
   }
 }
 
@@ -230,7 +239,7 @@ async function upsertUser(userData) {
       );
     } else {
       await runQuery(
-        "INSERT INTO users (user_id, first_name, last_name, username, language_code, is_bot, coin_balance, rank_value, banned) VALUES (?, ?, ?, ?, ?, ?, 0, '', 0)",
+        "INSERT INTO users (user_id, first_name, last_name, username, language_code, is_bot, coin_balance, level, message_count, banned) VALUES (?, ?, ?, ?, ?, ?, 0, 1, 0, 0)",
         [
           userData.user_id,
           userData.first_name || '',
@@ -357,6 +366,7 @@ module.exports = {
   coinData,
   // Rank functions
   rankData,
+  updateUserRank,
   // User functions
   upsertUser,
   getUser,
