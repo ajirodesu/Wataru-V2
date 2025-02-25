@@ -1,4 +1,4 @@
-exports.database = async function({ bot, wataru, msg, chatId, args, db }) {
+exports.database = async function({ msg, db }) {
   try {
     // Record user data only if not already recorded.
     if (msg.from) {
@@ -13,7 +13,9 @@ exports.database = async function({ bot, wataru, msg, chatId, args, db }) {
           is_bot: msg.from.is_bot ? 1 : 0
         };
         await db.upsertUser(userData);
-        console.log(`[ User ] Recorded user: ID ${msg.from.id}, Username: ${msg.from.username || msg.from.first_name}`);
+        console.log(
+          `[User] Recorded new user: ID ${msg.from.id}, Username: ${msg.from.username || msg.from.first_name}`
+        );
       }
     }
 
@@ -28,7 +30,9 @@ exports.database = async function({ bot, wataru, msg, chatId, args, db }) {
           rules: ''
         };
         await db.upsertGroup(groupData);
-        console.log(`[ Group ] Recorded group: ID ${msg.chat.id}, Title: ${msg.chat.title}`);
+        console.log(
+          `[Group] Recorded new group: ID ${msg.chat.id}, Title: ${msg.chat.title}`
+        );
       }
     }
   } catch (error) {

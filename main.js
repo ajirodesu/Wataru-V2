@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const loadAll = require('./system/utility/utils');
 const { install } = require('./system/install');
+const db = require('./system/database/database');
 
 // JSON file paths
 const JSON_FILES = {
@@ -73,7 +74,7 @@ const bot = new TelegramBot(global.config.token, { polling: true });
       try {
         const { listen } = require('./system/listen');
         const chatId = msg.chat.id;
-        await listen({ bot, msg, chatId });
+        await listen({ bot, msg, chatId, db });
         await install();
       } catch (err) {
         console.error('Error handling message:', err);

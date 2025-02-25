@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const db = require('./database/database');
 const { createWataru } = require("./utility/wataru");
 
-exports.listen = async function ({ bot, msg }) {
+exports.listen = async function ({ bot, msg, db }) {
   try {
     const wataru = createWataru(bot, msg);
 
