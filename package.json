@@ -17,6 +17,7 @@
     "fs-extra": "^11.2.0",
     "he": "^1.2.0",
     "moment-timezone": "^0.5.45",
+    "node-cron": "^3.0.3",
     "node-fetch": "^2.6.7",
     "node-telegram-bot-api": "^0.66.0",
     "sqlite3": "^5.1.7",
