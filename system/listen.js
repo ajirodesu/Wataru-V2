@@ -65,7 +65,7 @@ exports.listen = async function ({ bot, msg, db }) {
         const handlerName = path.basename(file, '.js');
         const handler = handlerModule[handlerName];
         if (typeof handler === 'function') {
-          await handler({ bot, msg, chatId: msg.chat.id, wataru, db });
+          handler({ bot, msg, chatId: msg.chat.id, wataru, db });
         } else {
           console.warn(`Handler ${file} does not export a function named "${handlerName}".`);
         }

@@ -41,6 +41,7 @@ function watchJSONFile(filename, globalKey) {
 global.client = {
   commands: new Map(),
   replies: new Map(),
+  crons: new Map(),
   cooldowns: new Map(),
   events: new Map(),
   callbacks: new Map()
