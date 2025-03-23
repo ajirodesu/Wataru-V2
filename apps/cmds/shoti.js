@@ -23,7 +23,7 @@ exports.onStart = async function({ wataru, chatId, msg, args }) {
 
     // Prepare a temporary file path based on the msg.message_id.
     const fileName = `${msg.message_id}.mp4`;
-    const filePath = path.join(__dirname, "..", "tmp", fileName);
+    const filePath = path.join(__dirname, "..", "temp", fileName);
 
     // Download the video using a stream.
     const downloadResponse = await axios({

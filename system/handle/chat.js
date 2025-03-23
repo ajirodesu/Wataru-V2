@@ -1,4 +1,4 @@
-exports.chat = async function({ bot, wataru, msg, chatId, args, db }) {
+exports.chat = async function({ bot, wataru, msg, chatId, args }) {
   const { commands } = global.client;
 
   // Iterate over all registered commands that implement an onChat handler.
@@ -11,8 +11,7 @@ exports.chat = async function({ bot, wataru, msg, chatId, args, db }) {
           wataru,
           msg,
           chatId,
-          args,
-          db
+          args
         });
         if (shouldContinue === false) {
           break;

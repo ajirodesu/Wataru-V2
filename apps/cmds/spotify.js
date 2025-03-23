@@ -115,7 +115,7 @@ exports.onCallback = async function({ bot, callbackQuery, chatId, args, payload 
     const mp3Response = await axios.get(songData.mp3, { responseType: 'arraybuffer' });
 
     // Ensure the temporary directory exists.
-    const tempDir = path.join(process.cwd(), 'app/tmp');
+    const tempDir = path.join(process.cwd(), 'apps/temp');
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }

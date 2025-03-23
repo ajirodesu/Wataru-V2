@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const cacheDir = path.join(process.cwd(), 'app/tmp');
+const cacheDir = path.join(process.cwd(), 'apps/temp');
 
 const create = async () => {
   try {

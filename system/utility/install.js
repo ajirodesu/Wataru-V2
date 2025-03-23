@@ -3,7 +3,7 @@
 const { execSync } = require("child_process");
 
 // Constants
-const RESTART_CODE = 1; // Changed from 0 to 1 to match the second code's restart condition
+const RESTART_CODE = 0;
 
 /**
  * Automatically installs missing NPM packages and restarts the bot.
@@ -44,7 +44,7 @@ exports.install = function() {
  */
 function restartBot() {
   console.log("Bot restarting now...");
-  process.exit(RESTART_CODE); // Uses exit code 1 to trigger restart in the second code
+  process.exit(RESTART_CODE); // Trigger restart via process manager
 }
 
 // Run only once

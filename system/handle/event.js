@@ -1,6 +1,6 @@
 const moment = require("moment-timezone");
 
-exports.event = async function({ bot, msg, chatId, wataru, db }) {
+exports.event = async function({ bot, msg, chatId, wataru }) {
   const timeStart = Date.now();
   const formattedTime = moment.tz(global.config.timeZone).format("HH:mm:ss L");
   const { events } = global.client;
@@ -17,7 +17,7 @@ exports.event = async function({ bot, msg, chatId, wataru, db }) {
       // Check if this event handler should process the current system event.
       if (eventHandler.meta.type.includes(eventType)) {
         try {
-          const context = { bot, wataru, msg, chatId, db };
+          const context = { bot, wataru, msg, chatId };
           await eventHandler.onStart(context); // Execute the event handler
 
           if (devMode) {

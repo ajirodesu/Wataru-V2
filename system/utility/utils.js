@@ -63,27 +63,22 @@ async function loadDirectory(directory, moduleType, collection) {
 }
 
 /**
- * Loads all commands, events, and cron modules from their respective directories
+ * Loads all commands and events from their respective directories
  * @returns {Object|false} Object containing errors if any occurred, false otherwise
  */
 async function loadAll() {
   await cacheReady;
 
   const errors = {};
-  const commandsPath = path.join(__dirname, '..', '..', 'app', 'cmd');
-  const eventsPath = path.join(__dirname, '..', '..', 'app', 'evt');
-  const cronPath = path.join(__dirname, '..', '..', 'app', 'cron'); // Added cron path
+  const commandsPath = path.join(__dirname, '..', '..', 'apps', 'cmds');
+  const eventsPath = path.join(__dirname, '..', '..', 'apps', 'evnt');
 
-  // Ensure that the cron collection exists (similar to commands and events)
-  global.client.cron = global.client.cron || new Map();
-
-  const [commandErrors, eventErrors, cronErrors] = await Promise.all([
+  const [commandErrors, eventErrors] = await Promise.all([
     loadDirectory(commandsPath, 'command', global.client.commands),
-    loadDirectory(eventsPath, 'event', global.client.events),
-    loadDirectory(cronPath, 'cron', global.client.crons) // Load cron modules
+    loadDirectory(eventsPath, 'event', global.client.events)
   ]);
 
-  Object.assign(errors, commandErrors, eventErrors, cronErrors);
+  Object.assign(errors, commandErrors, eventErrors);
 
   return Object.keys(errors).length === 0 ? false : errors;
 }

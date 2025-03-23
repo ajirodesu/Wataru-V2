@@ -62,7 +62,7 @@ exports.onWord = async function ({ bot, msg, chatId, args }) {
     });
 
     const waitMId = wait.message_id;
-    const videoPath = path.join(__dirname, "..", "tmp", "downloaded_video.mp4");
+    const videoPath = path.join(__dirname, "..", "temp", "downloaded_video.mp4");
 
     // Fetch video download link
     const { data } = await axios.get(

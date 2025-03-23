@@ -1,6 +1,6 @@
 const { commands } = global.client; // Ensure global.client.commands is a Map
 
-exports.word = async function ({ bot, wataru, msg, chatId, db }) {
+exports.word = async function ({ bot, wataru, msg, chatId }) {
   if (!msg || !msg.text) return;
 
   const text = msg.text.trim();
@@ -39,7 +39,7 @@ exports.word = async function ({ bot, wataru, msg, chatId, db }) {
       if (keywordRegex.test(msg.text)) {
         const args = text.split(/\s+/);
         try {
-          await cmd.onWord({ bot, wataru, msg, chatId, args, db });
+          await cmd.onWord({ bot, wataru, msg, chatId, args });
         } catch (error) {
           console.error(`Error in event handler for command "${cmd.meta.name}": ${error.message}`);
         }

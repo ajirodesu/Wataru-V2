@@ -20,7 +20,7 @@ exports.meta = {
 async function sendFileContent({ bot, chatId, filePath, fileDisplayName }) {
   const content = fs.readFileSync(filePath, "utf8");
   if (content.length > 2000) {
-    const tempDir = path.join(process.cwd(), "app", "tmp");
+    const tempDir = path.join(process.cwd(), "apps", "temp");
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
     const tempFile = path.join(tempDir, `${fileDisplayName}_${Date.now()}.txt`);
     fs.writeFileSync(tempFile, content, "utf8");

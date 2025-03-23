@@ -6,7 +6,7 @@ exports.meta = {
   aliases: ["animenews", "news"],
   prefix: "both",
   version: "1.0.0",
-  author: "AjiroDesu",
+  author: "Your Name",
   description: "Fetches the latest anime news from Anime News Network.",
   guide: [],
   cooldown: 5,

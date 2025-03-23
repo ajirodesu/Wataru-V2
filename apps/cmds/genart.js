@@ -22,7 +22,7 @@ exports.onStart = async function({ msg, bot, chatId, args, cwd }) {
 
   // Ensure cwd is defined, fallback to process.cwd()
   cwd = cwd || process.cwd();
-  const tempDir = path.join(cwd, "app/tmp");
+  const tempDir = path.join(cwd, "app/temp");
 
   // Ensure temp directory exists
   if (!fs.existsSync(tempDir)) {

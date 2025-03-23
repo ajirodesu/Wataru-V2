@@ -13,7 +13,7 @@ const cooldowns = {};
  * @param {object} options.msg - The incoming message object.
  * @param {Array<string>} [options.args] - Optional pre-parsed message tokens.
  */
-exports.greet = async function({ bot, wataru, msg, args, db }) {
+exports.greet = async function({ bot, wataru, msg, args }) {
   try {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
