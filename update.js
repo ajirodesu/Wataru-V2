@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs");
 
 // Constants
-const REPO_URL = "https://github.com/ajirodesu/wataru.git";
+const REPO_URL = "https://github.com/ajirodesu/wataru-v2.git";
 const PROJECT_DIR = path.resolve(__dirname);
 const SETUP_DIR = path.join(PROJECT_DIR, "json");
 const BACKUP_DIR = path.join(PROJECT_DIR, "system", "backups");
