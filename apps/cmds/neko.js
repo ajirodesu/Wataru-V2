@@ -10,7 +10,7 @@ async function fetchWaifu() {
   }
 }
 
-exports.meta = {
+const meta = {
   name: 'neko',
   version: '1.0.0',
   description: 'Random neko',
@@ -21,7 +21,7 @@ exports.meta = {
   guide: ['']
 };
 
-exports.onStart = async function({ bot, msg, db }) {
+async function onStart({ bot, msg, db }) {
   const chatId = msg.chat.id;
 
   // Send a temporary loading message.
@@ -44,3 +44,5 @@ exports.onStart = async function({ bot, msg, db }) {
     await bot.sendMessage(chatId, '❌ Failed to fetch a waifu. Please try again.');
   }
 };
+
+module.exports = { meta, onStart };

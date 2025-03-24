@@ -13,7 +13,7 @@ const extra = {
 // In-memory map to track each user's work cooldown info.
 const workCooldowns = new Map();
 
-exports.meta = {
+const meta = {
   name: "work",
   aliases: ["wk"],
   prefix: "both",
@@ -26,7 +26,7 @@ exports.meta = {
   category: "Chance Games",
 };
 
-exports.onStart = async function ({ wataru, chatId, msg, args, usages, db }) {
+async function onStart ({ wataru, chatId, msg, args, usages, db }) {
   try {
     const userId = msg.from.id;
 
@@ -70,3 +70,4 @@ exports.onStart = async function ({ wataru, chatId, msg, args, usages, db }) {
     return await wataru.reply("Failed");
   }
 };
+module.exports = { meta, onStart };

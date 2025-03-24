@@ -1,11 +1,11 @@
-exports.meta = {
+const meta = {
   name: "welcome",
   description: "Handles new members joining the group and sends welcome messages.",
   type: "welcome",
   author: "Ajirodesu"
 };
 
-exports.onStart = async function({ bot, msg }) {
+async function onStart({ bot, msg }) {
   const chatId = msg.chat.id;
   const newMembers = msg.new_chat_members;
 
@@ -59,3 +59,5 @@ exports.onStart = async function({ bot, msg }) {
     }
   }
 };
+
+module.exports = { meta, onStart };

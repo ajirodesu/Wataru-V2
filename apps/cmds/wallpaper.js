@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "wallpaper",
   aliases: ["wp", "wall"],
   prefix: "both",
@@ -20,7 +20,7 @@ exports.meta = {
  * @param {string[]} params.args - Command arguments (e.g., category).
  * @param {Function} params.usages - Function to display usage guide.
  */
-exports.onStart = async function({ wataru, args, usages }) {
+async function onStart({ wataru, args, usages }) {
   try {
     // Define available categories and their Wallhaven codes
     const categories = {
@@ -66,3 +66,4 @@ exports.onStart = async function({ wataru, args, usages }) {
     await wataru.reply("An error occurred while fetching the wallpaper.");
   }
 };
+module.exports = { meta, onStart };

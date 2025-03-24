@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-exports.meta = {
+const meta = {
   name: "spotify",
   aliases: ["sp"],
   version: "1.0.0",
@@ -14,7 +14,7 @@ exports.meta = {
   category: "music"
 };
 
-exports.onStart = async function({ bot, chatId, msg, args }) {
+async function onStart({ bot, chatId, msg, args }) {
   const query = args.join(" ");
   if (!query) {
     return await bot.sendMessage(chatId, "Please provide a search query!");
@@ -67,7 +67,7 @@ exports.onStart = async function({ bot, chatId, msg, args }) {
   }
 };
 
-exports.onCallback = async function({ bot, callbackQuery, chatId, args, payload }) {
+async function onCallback({ bot, callbackQuery, chatId, args, payload }) {
   const { instanceId, choice } = payload;
 
   if (!global.client.callbacks.has(instanceId)) {
@@ -142,3 +142,5 @@ exports.onCallback = async function({ bot, callbackQuery, chatId, args, payload 
     await bot.sendMessage(chatId, "An error occurred while downloading the song!");
   }
 };
+
+module.exports = { meta, onStart, onCallback };

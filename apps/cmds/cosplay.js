@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "cosplay",
   aliases: [],
   version: "0.0.1",
@@ -13,7 +13,7 @@ exports.meta = {
   category: "anime"
 };
 
-exports.onStart = async function({ msg, bot, chatId, log, wataru }) {
+async function onStart({ msg, bot, chatId, log, wataru }) {
   try {
     // Define the GitHub repository details
     const owner = 'ajirodesu';
@@ -55,3 +55,5 @@ exports.onStart = async function({ msg, bot, chatId, log, wataru }) {
     await wataru.reply(`An error occurred while fetching a cosplay video: ${error.message}`);
   }
 };
+
+module.exports = { meta, onStart };

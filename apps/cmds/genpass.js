@@ -65,7 +65,7 @@ class PasswordGenerator {
   }
 }
 
-exports.meta = {
+const meta = {
   name: 'genpass',
   version: '1.0.0',
   description: 'Generate strong passwords with optional base word',
@@ -78,7 +78,7 @@ exports.meta = {
   type: 'anyone'
 };
 
-exports.onStart = async function({ msg, bot, chatId, args }) {
+async function onStart({ msg, bot, chatId, args }) {
   const passwordGenerator = new PasswordGenerator();
   const baseWord = args[0] || '';
   const firstName = msg.from.first_name;
@@ -115,3 +115,5 @@ ${passwords.join('\n')}
     await bot.sendMessage(chatId, `❌ Error: ${error.message}`);
   }
 };
+
+module.exports = { meta, onStart };

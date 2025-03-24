@@ -1,6 +1,6 @@
 const moment = require("moment-timezone");
 
-exports.meta = {
+const meta = {
   name: "adminnoti",
   aliases: ["sendnoti", "notify", "noti"],
   version: "1.0.0",
@@ -12,7 +12,7 @@ exports.meta = {
   category: "admin"
 };
 
-exports.onStart = async function({ bot, chatId, args, msg, db }) {
+async function onStart({ bot, chatId, args, msg, db }) {
   try {
     if (!args.length) {
       return await bot.sendMessage(chatId, "Please input message");
@@ -36,7 +36,7 @@ exports.onStart = async function({ bot, chatId, args, msg, db }) {
         // Store a reply context so that if someone in the group replies,
         // we can forward it back to the admin.
         global.client.replies.set(sentMsg.message_id, {
-          meta: exports.meta,
+          meta: meta,
           type: "sendnoti", // indicates that a group reply will be forwarded to admin
           adminChat: chatId,
           groupChat: group.group_id
@@ -55,7 +55,7 @@ exports.onStart = async function({ bot, chatId, args, msg, db }) {
   }
 };
 
-exports.onReply = async function({ bot, chatId, msg, db }) {
+async function onReply({ bot, chatId, msg, db }) {
   try {
     const replyToId = msg.reply_to_message?.message_id;
     if (!replyToId || !global.client.replies.has(replyToId)) return;
@@ -109,3 +109,4 @@ exports.onReply = async function({ bot, chatId, msg, db }) {
     await bot.sendMessage(chatId, `Error processing your reply: ${error.message}`);
   }
 };
+module.exports = { meta, onStart, onReply };

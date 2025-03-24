@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-exports.meta = {
+const meta = {
   name: "resetdb",
   aliases: ["cleardb", "dbreset"],
   prefix: "both",
@@ -14,7 +14,7 @@ exports.meta = {
   category: "system"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, usages }) {
+async function onStart({ wataru, chatId, msg, usages }) {
   try {
     // Define the database path
     const dbPath = path.join(process.cwd(), 'system', 'database', 'wataru.db');
@@ -39,3 +39,4 @@ exports.onStart = async function({ wataru, chatId, msg, usages }) {
     await wataru.reply("An error occurred while resetting the database: " + error.message);
   }
 };
+module.exports = { meta, onStart };

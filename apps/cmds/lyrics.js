@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "lyrics",
   aliases: ["songlyrics"],
   prefix: "both",
@@ -13,7 +13,7 @@ exports.meta = {
   category: "music"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   // Check if the user provided a song name
   if (args.length === 0) {
     return await usages(); // Sends usage instructions if no input
@@ -50,3 +50,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     await wataru.reply("An error occurred while fetching the lyrics.");
   }
 };
+module.exports = { meta, onStart };

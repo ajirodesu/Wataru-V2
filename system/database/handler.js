@@ -1,6 +1,6 @@
 exports.database = async function({ msg, db }) {
   try {
-    // Record user data only if not already recorded.
+    // Process user data and increment message count.
     if (msg.from) {
       const existingUser = await db.getUser(msg.from.id);
       if (!existingUser) {
@@ -17,9 +17,11 @@ exports.database = async function({ msg, db }) {
           `[User] Recorded new user: ID ${msg.from.id}, Username: ${msg.from.username || msg.from.first_name}`
         );
       }
+      // Increment the user's message count on every message.
+      await db.incrementMessageCount(msg.from.id);
     }
 
-    // Record group data only if not already recorded.
+    // Process group data.
     if (msg.chat && (msg.chat.type === 'group' || msg.chat.type === 'supergroup')) {
       const existingGroup = await db.getGroup(msg.chat.id);
       if (!existingGroup) {

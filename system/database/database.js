@@ -12,7 +12,7 @@ const db = new sqlite3.Database(dbFilePath, (err) => {
 
 // Create 2 tables: one for users and one for groups.
 db.serialize(() => {
-  // Users table: now includes level and message_count for rankup.
+  // Users table: includes coin_balance, level, message_count for rankup, and banned status.
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       user_id INTEGER PRIMARY KEY,
@@ -218,6 +218,15 @@ async function updateUserRank(userId, newLevel, newMessageCount) {
   }
 }
 
+// Helper: increment a user's message count by 1.
+async function incrementMessageCount(userId) {
+  try {
+    await runQuery("UPDATE users SET message_count = message_count + 1 WHERE user_id = ?", [userId]);
+  } catch (error) {
+    console.error(`Error incrementing message count for user ${userId}:`, error);
+  }
+}
+
 /*============================
   USER FUNCTIONS (COMPLETE DATA)
 ============================*/
@@ -367,6 +376,7 @@ module.exports = {
   // Rank functions
   rankData,
   updateUserRank,
+  incrementMessageCount,  // Export the new helper function.
   // User functions
   upsertUser,
   getUser,

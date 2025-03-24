@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "rank",
   aliases: ["level"],
   prefix: "both", 
@@ -11,7 +11,7 @@ exports.meta = {
   category: "utility"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages, db }) {
+async function onStart({ wataru, chatId, msg, args, usages, db }) {
   try {
     // Attempt to retrieve the user data.
     let user = await db.getUser(msg.from.id);
@@ -45,3 +45,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages, db }) {
     await wataru.reply("An error occurred while retrieving your rank.");
   }
 };
+module.exports = { meta, onStart };

@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "rps",
   version: "1.0.0",
   description: "Play Rock Paper Scissors",
@@ -9,7 +9,7 @@ exports.meta = {
   guide: [""],
 };
 
-exports.onStart = async function ({ bot, msg }) {
+async function onStart ({ bot, msg }) {
   const chatId = msg.chat.id;
   const choices = ["rock", "paper", "scissors"];
   const emojis = { rock: "🪨", paper: "📄", scissors: "✂️" };
@@ -94,7 +94,7 @@ exports.onStart = async function ({ bot, msg }) {
   }
 };
 
-exports.onCallback = async function ({ bot, callbackQuery, payload }) {
+async function onCallback({ bot, callbackQuery, payload }) {
   // payload is already parsed by the global callback handler
   const choices = ["rock", "paper", "scissors"];
   const emojis = { rock: "🪨", paper: "📄", scissors: "✂️" };
@@ -148,3 +148,5 @@ exports.onCallback = async function ({ bot, callbackQuery, payload }) {
     }
   }
 };
+
+module.exports = { meta, onStart, onCallback };

@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "animepic",
   aliases: ["animephoto", "animeimg", "animeimage"],
   prefix: "both",
@@ -13,7 +13,7 @@ exports.meta = {
   category: "fun"
 };
 
-exports.onStart = async function({ wataru, chatId, msg }) {
+async function onStart({ wataru, chatId, msg }) {
   try {
     // Fetch a batch of cosplay posts from Safebooru API
     const response = await axios.get('https://safebooru.donmai.us/posts.json', {
@@ -46,3 +46,4 @@ exports.onStart = async function({ wataru, chatId, msg }) {
     await wataru.reply("Sorry, I couldn't fetch a cosplay photo right now. Please try again later.");
   }
 };
+module.exports = { meta, onStart };

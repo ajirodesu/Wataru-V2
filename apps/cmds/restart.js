@@ -3,7 +3,7 @@
 const fs = require("fs-extra");
 const path = require("path");
 
-exports.meta = {
+const meta = {
   name: "restart",
   aliases: [],
   prefix: "command", // Adjust if Wataru uses "both" or similar
@@ -20,7 +20,7 @@ exports.meta = {
  * Handles the /restart command in Telegram.
  * @param {Object} params - Wataru bot framework parameters.
  */
-exports.onStart = async function({ wataru, chatId, msg }) {
+async function onStart({ wataru, chatId, msg }) {
   const assetsDir = path.join(__dirname, "assets");
   fs.ensureDirSync(assetsDir);
 
@@ -50,3 +50,4 @@ exports.onStart = async function({ wataru, chatId, msg }) {
     await wataru.reply("❌ | Failed to initiate restart");
   }
 }; 
+module.exports = { meta, onStart };

@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "active",
   aliases: [],
   prefix: "both",
@@ -11,10 +11,10 @@ exports.meta = {
   category: "User Management"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages, db }) {
+async function onStart({ wataru, chatId, msg, args, usages, db }) {
   try {
     const startTime = Date.now();
-    // Retrieve all users from the database using wataru db functionality.
+    // Retrieve all users from the database.
     const allUsers = await db.getAllUsers();
 
     // Sort users by message_count in descending order.
@@ -34,7 +34,7 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages, db }) {
       rankIndex++;
       // Use username if available; otherwise, combine first and last name or fallback to "Unknown".
       const userName = user.username || (user.first_name ? user.first_name + (user.last_name ? ` ${user.last_name}` : '') : "Unknown");
-      result += `${rankIndex}. **${userName}**\n📨 Messages: **${user.message_count || 0}**\n\n`;
+      result += `${rankIndex}. **${userName}**\n📨 Messages: **${user.message_count || 0}**\n💰 Coins: **${user.coin_balance || 0}**\n\n`;
     }
 
     result += `${global.config.prefix}active <page> - View a specific page.`;
@@ -44,3 +44,5 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages, db }) {
     await wataru.reply("An error occurred while listing active users.", { parse_mode: "Markdown" });
   }
 };
+
+module.exports = { meta, onStart };

@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "uptime",
   aliases: ["up"],
   version: "1.0.0",
@@ -10,7 +10,7 @@ exports.meta = {
   category: "info"
 };
 
-exports.onStart = async function({ bot, chatId, msg, args }) {
+async function onStart({ bot, chatId, msg, args }) {
   // Retrieve the user's actual name (combine first and last name if available)
   let userName = msg.from.first_name;
   if (msg.from.last_name) {
@@ -40,3 +40,4 @@ exports.onStart = async function({ bot, chatId, msg, args }) {
   const message = `Greetings Master ${userName}, I've been running for ${uptimeStr}.`;
   await bot.sendMessage(chatId, message);
 };
+module.exports = { meta, onStart };

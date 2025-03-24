@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const path = require("path");
 
-exports.meta = {
+const meta = {
   name: "adminonly",
   aliases: ["adonly", "onlyad", "onlyadmin"],
   prefix: true, // adjust as needed
@@ -16,7 +16,7 @@ exports.meta = {
   ]
 };
 
-exports.onStart = function({ wataru, args }) {
+async function onStart({ wataru, args }) {
   // Use the configuration file at app/config.json relative to the cwd.
   const configPath = path.join(process.cwd(), "json/config.json");
   let config = global.config; // global.config is already loaded
@@ -41,3 +41,4 @@ exports.onStart = function({ wataru, args }) {
     ? "Bot admin-only mode has been enabled. Only bot admins can use the bot."
     : "Bot admin-only mode has been disabled. Everyone can use the bot.");
 };
+module.exports = { meta, onStart };

@@ -3,7 +3,7 @@
 const path = require("path");
 const updater = require(path.join(process.cwd(), "update"));
 
-exports.meta = {
+const meta = {
   name: "update",
   aliases: [],
   prefix: "both",
@@ -20,7 +20,7 @@ exports.meta = {
  * Handles the /update command in Telegram.
  * @param {Object} params - Wataru bot framework parameters.
  */
-exports.onStart = async function({ wataru, chatId, msg }) {
+async function onStart({ wataru, chatId, msg }) {
   // Optional: Restrict to bot owner (uncomment and set your ID)
   // const ownerId = "YOUR_TELEGRAM_ID";
   // if (msg.from.id.toString() !== ownerId) {
@@ -56,3 +56,4 @@ if (require.main === module) {
       process.exit(2); // Exit with error code (no restart)
     });
 }
+module.exports = { meta, onStart };

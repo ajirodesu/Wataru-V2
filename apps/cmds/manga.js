@@ -1,11 +1,11 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "manga",
   aliases: ["mangainfo", "comic"],
   prefix: "both",
   version: "1.0.0",
-  author: "Kaiz API",
+  author: "AjiroDesu",
   description: "Get information about a manga.",
   guide: ["<manga_name>"],
   cooldown: 5,
@@ -13,10 +13,10 @@ exports.meta = {
   category: "anime"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   const query = args.join(" ").trim();
   if (!query) {
-    return await usages();
+    return await wataru.reply('Please provide a manga name.');
   }
 
   try {
@@ -55,3 +55,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     await wataru.reply("An error occurred while fetching manga information.");
   }
 };
+module.exports = { meta, onStart };

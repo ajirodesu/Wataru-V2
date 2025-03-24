@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "weather",
   aliases: ["w"],
   prefix: "both",
@@ -13,7 +13,7 @@ exports.meta = {
   category: "utility"
 };
 
-exports.onStart = async function({ wataru, msg, args, usages }) {
+async function onStart({ wataru, msg, args, usages }) {
   // Check if a city name was provided
   if (args.length === 0) {
     return await usages();
@@ -70,3 +70,4 @@ exports.onStart = async function({ wataru, msg, args, usages }) {
     await wataru.reply("City not found or an error occurred while fetching the weather.");
   }
 };
+module.exports = { meta, onStart };

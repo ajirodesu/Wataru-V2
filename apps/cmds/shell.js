@@ -1,6 +1,6 @@
 const { exec } = require("child_process");
 
-exports.meta = {
+const meta = {
   name: "shell",
   version: "1.0.0",
   description: "Execute shell commands via the bot.",
@@ -11,7 +11,7 @@ exports.meta = {
   guide: ["<command>"],
 };
 
-exports.onStart = async function ({ bot, msg, args, chatId, usages }) {
+async function onStart ({ bot, msg, args, chatId, usages }) {
   const command = args.join(" ");
 
   if (!command) {
@@ -32,3 +32,4 @@ exports.onStart = async function ({ bot, msg, args, chatId, usages }) {
     bot.sendMessage(chatId, response.slice(0, 4000)); // Limit to prevent overflow
   });
 };
+module.exports = { meta, onStart };

@@ -1,11 +1,11 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "anime",
   aliases: ["animeinfo", "mal"],
   prefix: "both",
   version: "1.0.0",
-  author: "Kaiz API",
+  author: "AjiroDesu",
   description: "Get information about an anime.",
   guide: ["<anime_name>"],
   cooldown: 5,
@@ -13,13 +13,13 @@ exports.meta = {
   category: "anime"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   // Combine arguments into a single query and trim whitespace
   const query = args.join(" ").trim();
 
   // If no query is provided, send usage guide
   if (!query) {
-    return await usages();
+    return await wataru.reply('Please provide an anime name.');
   }
 
   try {
@@ -65,3 +65,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     await wataru.reply("An error occurred while fetching anime information.");
   }
 };
+module.exports = { meta, onStart };

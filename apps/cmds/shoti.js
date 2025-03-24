@@ -2,7 +2,7 @@ const axios = require("axios");
 const path = require("path");
 const fs = require("fs-extra");
 
-exports.meta = {
+const meta = {
   name: "shoti",
   aliases: [],
   version: "1.0.0",
@@ -14,7 +14,7 @@ exports.meta = {
   category: "media"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args }) {
+async function onStart({ wataru, chatId, msg, args }) {
   try {
     // Fetch random video data from the API.
     const response = await axios.get("https://kaiz-apis.gleeze.com/api/shoti");
@@ -52,3 +52,4 @@ exports.onStart = async function({ wataru, chatId, msg, args }) {
     await wataru.reply(error.message);
   }
 };
+module.exports = { meta, onStart };

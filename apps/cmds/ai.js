@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "ai",
   aliases: ["chatgpt", "openai"],
   prefix: "both",
@@ -17,7 +17,7 @@ exports.meta = {
  * Starts the AI conversation with the initial query.
  * @param {Object} params - Wataru bot framework parameters.
  */
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   const query = args.join(" ");
   if (!query) return usages();
 
@@ -40,7 +40,7 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     // Send response and store conversation with the new message ID
     const sentMessage = await wataru.reply(aiResponse, { parse_mode: "Markdown" });
     global.client.replies.set(sentMessage.message_id, {
-      meta: exports.meta,
+      meta: meta,
       conversation,
       userId
     });
@@ -54,7 +54,7 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
  * Continues the AI conversation based on user replies to any bot message.
  * @param {Object} params - Reply handler parameters.
  */
-exports.onReply = async function({ wataru, chatId, msg, args, data }) {
+async function onReply({ wataru, chatId, msg, args, data }) {
   const userInput = (Array.isArray(args) && args.length ? args.join(" ") : msg.text || "").trim();
   if (!userInput) {
     return wataru.reply("Please reply with a message to continue the conversation.");
@@ -88,7 +88,7 @@ exports.onReply = async function({ wataru, chatId, msg, args, data }) {
     // Send the AI response and store updated conversation with the new message ID
     const sentMessage = await wataru.reply(aiResponse, { parse_mode: "Markdown" });
     global.client.replies.set(sentMessage.message_id, {
-      meta: exports.meta,
+      meta: meta,
       conversation,
       userId
     });
@@ -100,3 +100,4 @@ exports.onReply = async function({ wataru, chatId, msg, args, data }) {
     await wataru.reply("An error occurred while continuing the conversation.");
   }
 };
+module.exports = { meta, onStart, onReply };

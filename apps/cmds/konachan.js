@@ -19,7 +19,7 @@ async function fetchKonachanImage() {
   }
 }
 
-exports.meta = {
+const meta = {
   name: 'konachan',
   version: '1.0.0',
   description: 'Fetches a random anime image from Konachan.',
@@ -30,7 +30,7 @@ exports.meta = {
   guide: ['']
 };
 
-exports.onStart = async function({ bot, msg, db }) {
+async function onStart({ bot, msg, db }) {
   const chatId = msg.chat.id;
 
   // Send a loading message
@@ -52,3 +52,5 @@ exports.onStart = async function({ bot, msg, db }) {
     parse_mode: 'HTML'
   });
 };
+
+module.exports = { meta, onStart };

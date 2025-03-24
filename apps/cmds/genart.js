@@ -3,7 +3,7 @@ const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 
-exports.meta = {
+const meta = {
   name: "genart",
   aliases: [],
   version: "1.0.0",
@@ -15,7 +15,7 @@ exports.meta = {
   category: "fun"
 };
 
-exports.onStart = async function({ msg, bot, chatId, args, cwd }) {
+async function onStart({ msg, bot, chatId, args, cwd }) {
   if (!args.length) {
     return bot.sendMessage(chatId, "⚠️ Please provide a prompt to generate an image.");
   }
@@ -71,3 +71,4 @@ exports.onStart = async function({ msg, bot, chatId, args, cwd }) {
     await bot.sendMessage(chatId, "❌ An error occurred while generating the image. Try again later.");
   }
 };
+module.exports = { meta, onStart };

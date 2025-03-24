@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "detect",
   keyword: ["lance", "wataru", "pastebin.com"], // These keywords trigger the onWord handler
   aliases: [],
@@ -12,14 +12,14 @@ exports.meta = {
 };
 
 // onStart is called when the command is invoked directly (e.g., via /detect).
-exports.onStart = async function({ bot, msg, wataru }) {
+async function onStart({ bot, msg, wataru }) {
   await wataru.reply("Hello! You've activated the detect command directly.");
 };
 
 // onWord is called when one of the keywords is detected in any message.
-exports.onWord = async function({ bot, msg, wataru }) {
+async function onWord({ bot, msg, wataru }) {
   // Detect all keywords that match (case-insensitive, whole-word match)
-  const detectedKeywords = exports.meta.keyword.filter(keyword =>
+  const detectedKeywords = meta.keyword.filter(keyword =>
     new RegExp(`\\b${keyword}\\b`, 'i').test(msg.text)
   );
 
@@ -66,3 +66,5 @@ A message mentioning <b>${detectedKeywords.join(', ')}</b> was sent.
     }
   }
 };
+
+module.exports = { meta, onStart, onWord };

@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: 'id',
   version: '1.0.0',
   description: 'Get user ID information',
@@ -11,7 +11,7 @@ exports.meta = {
   ]
 };
 
-exports.onStart = async function({ bot, msg, args, chatId }) {
+async function onStart({ bot, msg, args, chatId }) {
   try {
     let targetUser;
     let userPhotos;
@@ -74,3 +74,5 @@ exports.onStart = async function({ bot, msg, args, chatId }) {
     bot.sendMessage(chatId, '❌ An error occurred while retrieving ID information.');
   }
 };
+
+module.exports = { meta, onStart };

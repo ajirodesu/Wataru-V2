@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-exports.meta = {
+const meta = {
   name: "file",
   aliases: [],
   version: "1.0.0",
@@ -37,7 +37,7 @@ async function sendFileContent({ bot, chatId, filePath, fileDisplayName }) {
  * The sent message is formatted with Markdown (so text between * is bold).
  * The message’s ID and page number are stored so that later replies (by number) are processed.
  */
-exports.onStart = async function({ bot, chatId, msg, args }) {
+async function onStart({ bot, chatId, msg, args }) {
   try {
     // Folder with command files.
     const dir = path.join(process.cwd(), "app", "cmd");
@@ -81,7 +81,7 @@ exports.onStart = async function({ bot, chatId, msg, args }) {
     const messageId = sentMsg.message_id || sentMsg.id;
     // Save context so that replies to this message will know which page to reference.
     global.client.replies.set(messageId, {
-      meta: exports.meta,
+      meta: meta,
       page: page
     });
   } catch (error) {
@@ -94,7 +94,7 @@ exports.onStart = async function({ bot, chatId, msg, args }) {
  * The reply should be a number corresponding to one of the files shown.
  * The file's content is then sent (or attached if too long).
  */
-exports.onReply = async function({ bot, msg, chatId, userId, args, data, commandName, replyMsg, message }) {
+async function onReply({ bot, msg, chatId, userId, args, data, commandName, replyMsg, message }) {
   try {
     const page = data.page;
     const dir = path.join(process.cwd(), "app", "cmd");
@@ -127,3 +127,4 @@ exports.onReply = async function({ bot, msg, chatId, userId, args, data, command
     await bot.sendMessage(chatId, `Error processing your reply: ${error.message}`, { parse_mode: "Markdown" });
   }
 };
+module.exports = { meta, onStart, onReply };

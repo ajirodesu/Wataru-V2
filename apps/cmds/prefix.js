@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "prefix",
   aliases: [],
   prefix: "both", // Command recognized with or without the normal prefix.
@@ -14,7 +14,7 @@ exports.meta = {
   category: "settings"
 };
 
-exports.onStart = async function({ bot, chatId, msg, args, wataru, db }) {
+async function onStart({ bot, chatId, msg, args, wataru, db }) {
   // In a private chat, only display the global prefix.
   if (msg.chat.type === "private") {
     return await wataru.reply(
@@ -88,7 +88,7 @@ exports.onStart = async function({ bot, chatId, msg, args, wataru, db }) {
   );
 };
 
-exports.onCallback = async function({ bot, callbackQuery, chatId, wataru, db }) {
+async function onCallback({ bot, callbackQuery, chatId, wataru, db }) {
   // Parse the callback data.
   let payload;
   try {
@@ -137,3 +137,4 @@ exports.onCallback = async function({ bot, callbackQuery, chatId, wataru, db }) 
     }
   );
 };
+module.exports = { meta, onStart, onCallback };

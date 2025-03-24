@@ -5,7 +5,7 @@ const crypto = require('crypto');
 // Store quiz data with quiz ID as key and question details as value
 const quizData = new Map();
 
-exports.meta = {
+const meta = {
   name: "quiz",
   aliases: ["trivia"],
   prefix: "both",
@@ -24,7 +24,7 @@ exports.meta = {
  * @param {Object} params.wataru - The bot instance.
  * @param {number} params.chatId - The chat ID where the command was invoked.
  */
-exports.onStart = async function({ wataru, chatId }) {
+async function onStart({ wataru, chatId }) {
   try {
     // Fetch a random multiple-choice question from Open Trivia Database
     const response = await axios.get('https://opentdb.com/api.php?amount=1&type=multiple');
@@ -70,7 +70,7 @@ exports.onStart = async function({ wataru, chatId }) {
  * @param {number} params.messageId - The message ID.
  * @param {Array} params.args - The arguments from the callback data.
  */
-exports.onCallback = async function({ bot, callbackQuery, chatId, messageId, args }) {
+async function onCallback({ bot, callbackQuery, chatId, messageId, args }) {
   // Since callback data is quiz:<quizId>:<answerIndex>,
   // args will be ['quizId', 'answerIndex'] after parsing
   const [quizId, answerIndexStr] = args;
@@ -114,3 +114,4 @@ function shuffle(array) {
   }
   return array;
 }
+module.exports = { meta, onStart, onCallback };

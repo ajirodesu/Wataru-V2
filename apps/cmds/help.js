@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "help",
   aliases: ["h"],
   version: "0.0.1",
@@ -13,7 +13,7 @@ exports.meta = {
 
 const COMMANDS_PER_PAGE = 10;
 
-exports.onStart = async function ({ bot, chatId, msg, wataru, db }) {
+async function onStart ({ bot, chatId, msg, wataru, db }) {
   try {
     const userId = msg.from.id;
     const { commands } = global.client;
@@ -98,7 +98,7 @@ exports.onStart = async function ({ bot, chatId, msg, wataru, db }) {
   }
 };
 
-exports.onCallback = async function ({ bot, callbackQuery, chatId, args, payload, db }) {
+async function onCallback({ bot, callbackQuery, chatId, args, payload, db }) {
   try {
     // Ensure this callback is for the help command.
     if (!payload || payload.command !== "help") return;
@@ -340,3 +340,4 @@ function capitalize(text) {
   if (!text) return "";
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+module.exports = { meta, onStart, onCallback };

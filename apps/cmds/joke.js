@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: 'joke',
   version: '1.0.0',
   description: 'Sends a hilarious random joke',
@@ -13,7 +13,7 @@ exports.meta = {
   ]
 };
 
-exports.onStart = async function({ bot, msg }) {
+async function onStart({ bot, msg }) {
   try {
     const jokeResponse = await axios.get('https://official-joke-api.appspot.com/random_joke');
     const joke = jokeResponse.data;
@@ -68,3 +68,5 @@ ${randomBackupJoke.meta}
     });
   }
 };
+
+module.exports = { meta, onStart };

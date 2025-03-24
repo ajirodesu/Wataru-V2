@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "flux",
   aliases: ["fluxai"],
   prefix: "both",
@@ -11,7 +11,7 @@ exports.meta = {
   category: "ai"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   // Check if a prompt is provided
   if (args.length === 0) {
     return await usages();
@@ -32,3 +32,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     await wataru.reply("An error occurred while generating the image.");
   }
 };
+module.exports = { meta, onStart };

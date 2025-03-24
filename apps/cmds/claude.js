@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "claude",
   aliases: ["claudeai"],
   prefix: "both",
@@ -13,7 +13,7 @@ exports.meta = {
   category: "ai"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   // Combine arguments into a single query string
   const question = args.join(" ");
 
@@ -40,3 +40,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     await wataru.reply("An error occurred while fetching the Claude response.");
   }
 };
+module.exports = { meta, onStart };

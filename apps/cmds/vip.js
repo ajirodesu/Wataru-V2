@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Command configuration
-exports.meta = {
+const meta = {
   name: "vip",
   version: "0.0.1",
   type: "anyone",
@@ -14,7 +14,7 @@ exports.meta = {
 };
 
 // Command initialization
-exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
+async function onStart ({ bot, chatId, msg, args, usages }) {
   // Define the path to the vip.json file in the json folder
   const vipPath = path.join(process.cwd(), 'json', 'vip.json');
   
@@ -131,3 +131,5 @@ exports.onStart = async function ({ bot, chatId, msg, args, usages }) {
   // Handle invalid or unknown commands
   return usages();
 };
+
+module.exports = { meta, onStart };

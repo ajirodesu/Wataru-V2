@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Command configuration
-exports.meta = {
+const meta = {
   name: "admin",
   aliases: ["admins", "ad"],
   version: "0.0.1",
@@ -15,7 +15,7 @@ exports.meta = {
 };
 
 // Command initialization
-exports.onStart = async function ({ wataru, bot, chatId, msg, args, usages }) {
+async function onStart ({ wataru, bot, chatId, msg, args, usages }) {
 
   // Define the path to the config.json file in the json folder
   const configPath = path.join(process.cwd(), 'json', 'config.json');
@@ -132,3 +132,5 @@ exports.onStart = async function ({ wataru, bot, chatId, msg, args, usages }) {
   // Handle invalid or unknown commands
   return usages();
 };
+
+module.exports = { meta, onStart };

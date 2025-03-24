@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "fact",
   aliases: [],
   version: "0.0.1",
@@ -12,7 +12,7 @@ exports.meta = {
   category: "fun"
 };
 
-exports.onStart = async function({ msg, bot, chatId }) {
+async function onStart({ msg, bot, chatId }) {
   try {
     const factResponse = await axios.get('https://uselessfacts.jsph.pl/random.json?language=en');
     const fact = factResponse.data.text;
@@ -67,3 +67,4 @@ ${randomFact}
     });
   }
 }; 
+module.exports = { meta, onStart };

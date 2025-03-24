@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "whatanime",
   aliases: ["animeid", "findanime", "sauce"],
   prefix: "both",
@@ -13,7 +13,7 @@ exports.meta = {
   category: "anime"
 };
 
-exports.onStart = async function({ wataru, bot, chatId, msg, args, usages }) {
+async function onStart({ wataru, bot, chatId, msg, args, usages }) {
   let imageUrl;
 
   // **Step 1: Check if the command is used in reply to a photo**
@@ -65,3 +65,4 @@ exports.onStart = async function({ wataru, bot, chatId, msg, args, usages }) {
     await wataru.reply("An error occurred while fetching the anime information.");
   }
 };
+module.exports = { meta, onStart };

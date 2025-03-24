@@ -1,7 +1,7 @@
 const axios = require('axios');
 const xml2js = require('xml2js');
 
-exports.meta = {
+const meta = {
   name: "aninews",
   aliases: ["animenews", "news"],
   prefix: "both",
@@ -18,7 +18,7 @@ exports.meta = {
  * Fetches and displays the latest anime news.
  * @param {Object} params - Wataru bot framework parameters.
  */
-exports.onStart = async function({ wataru, chatId }) {
+async function onStart({ wataru, chatId }) {
   try {
     // Fetch the RSS feed from Anime News Network
     const rssUrl = "https://www.animenewsnetwork.com/newsfeed/rss.xml";
@@ -52,3 +52,4 @@ exports.onStart = async function({ wataru, chatId }) {
     await wataru.reply("An error occurred while fetching anime news.");
   }
 };
+module.exports = { meta, onStart };

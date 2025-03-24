@@ -22,7 +22,7 @@ class Imgur {
   }
 }
 
-exports.meta = {
+const meta = {
   name: "imgur",
   aliases: [],
   version: "1.0.0",
@@ -34,7 +34,7 @@ exports.meta = {
   category: "utility",
 };
 
-exports.onStart = async function ({ msg, bot }) {
+async function onStart ({ msg, bot }) {
   try {
     // Ensure the message is a reply with a photo
     if (!msg.reply_to_message || !msg.reply_to_message.photo || msg.reply_to_message.photo.length === 0) {
@@ -70,3 +70,4 @@ exports.onStart = async function ({ msg, bot }) {
     return bot.sendMessage(msg.chat.id, "An error occurred while uploading the image.");
   }
 };
+module.exports = { meta, onStart };

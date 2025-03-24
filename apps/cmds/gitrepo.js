@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-exports.meta = {
+const meta = {
   name: 'gitrepo',
   version: '1.0.0',
   description: 'Search and download GitHub repositories',
@@ -13,7 +13,7 @@ exports.meta = {
   guide: '<search term|username/repository>'
 };
 
-exports.onStart = async function({ bot, msg, args, chatId, usages }) {
+async function onStart({ bot, msg, args, chatId, usages }) {
 
   if (args.length < 1) {
     return bot.sendMessage(chatId, '❌ Usage:\n/gitrepo <search term>\n/gitrepo <username>/<repository>');
@@ -142,3 +142,5 @@ function handleError(bot, chatId, error) {
   }
   bot.sendMessage(chatId, errorMessage);
 }
+
+module.exports = { meta, onStart };

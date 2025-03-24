@@ -9,7 +9,7 @@ const baseApiUrl = async () => {
   return base.data.api;
 };
 
-exports.meta = {
+const meta = {
   name: "downloader",
   keyword: [
     "https://vt.tiktok.com",
@@ -34,7 +34,7 @@ exports.meta = {
 };
 
 // Triggered when the command is invoked directly (e.g., /autodl).
-exports.onStart = async function ({ bot, msg, chatId }) {
+async function onStart ({ bot, msg, chatId }) {
   await bot.sendMessage(
     chatId,
     "Send a video link, and I'll download it for you!",
@@ -43,11 +43,11 @@ exports.onStart = async function ({ bot, msg, chatId }) {
 };
 
 // Triggered when a message contains a supported URL.
-exports.onWord = async function ({ bot, msg, chatId, args }) {
+async function onWord({ bot, msg, chatId, args }) {
   const messageText = msg.link_preview_options?.url || msg.text || "";
 
   // Check if the message contains a supported URL
-  const detectedUrl = exports.meta.keyword.find((url) =>
+  const detectedUrl = meta.keyword.find((url) =>
     messageText.startsWith(url)
   );
 
@@ -96,3 +96,4 @@ exports.onWord = async function ({ bot, msg, chatId, args }) {
     await bot.sendMessage(chatId, `❎ Error: ${error.message}`);
   }
 };
+module.exports = { meta, onStart, onWord };

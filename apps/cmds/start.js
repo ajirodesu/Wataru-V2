@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: 'start',
   version: '1.0.0',
   description: 'Welcome message and instructions',
@@ -9,7 +9,7 @@ exports.meta = {
   guide: []
 };
 
-exports.onStart = async function({ bot, msg, chatId }) {
+async function onStart({ bot, msg, chatId }) {
   const firstName = msg.from.first_name;
 
   const welcomeMessage = `
@@ -32,3 +32,5 @@ If you have any questions, feel free to reach out. Let's get started!
     parse_mode: 'Markdown'
   });
 };
+
+module.exports = { meta, onStart };

@@ -1,11 +1,11 @@
-exports.meta = {
+const meta = {
   name: "goodbye",
   description: "Handles members leaving the group and sends goodbye messages.",
   type: "leave",
   author: "AjiroDesu"
 };
 
-exports.onStart = async function({ bot, msg }) {
+async function onStart({ bot, msg }) {
   const chatId = msg.chat.id;
   const leftMember = msg.left_chat_member;
 
@@ -49,3 +49,5 @@ exports.onStart = async function({ bot, msg }) {
     }
   }
 };
+
+module.exports = { meta, onStart };

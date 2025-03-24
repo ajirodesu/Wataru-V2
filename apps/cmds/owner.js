@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: 'owner',
   version: '1.0.0',
   description: 'Displays comprehensive information about the bot owner',
@@ -9,7 +9,7 @@ exports.meta = {
   guide: []
 };
 
-exports.onStart = async function({ bot, msg }) {
+async function onStart({ bot, msg }) {
   const chatId = msg.chat.id;
   const ownerName = global.config.owner;
   const adminContact = global.config.admin[0]; // Primary contact from the admin array
@@ -55,3 +55,5 @@ For any inquiries, collaborations, or support, please feel free to reach out usi
     await bot.sendMessage(chatId, ownerInfo, { parse_mode: 'Markdown' });
   }
 };
+
+module.exports = { meta, onStart };

@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "meme",
   aliases: ["memes", "randommeme"],
   prefix: "both",
@@ -13,7 +13,7 @@ exports.meta = {
   category: "fun"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   try {
     // Define the API endpoint to fetch a random meme from r/memes
     const apiUrl = "https://meme-api.com/gimme/memes";
@@ -32,3 +32,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     await wataru.reply("An error occurred while fetching the meme.");
   }
 };
+module.exports = { meta, onStart };

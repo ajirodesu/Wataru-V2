@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.meta = {
+const meta = {
   name: "gpt",
   aliases: ["gpt4o"],
   prefix: "both",
@@ -13,7 +13,7 @@ exports.meta = {
   category: "ai"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   // Combine all arguments into a single query string
   const query = args.join(" ");
 
@@ -40,3 +40,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     await wataru.reply("An error occurred while trying to fetch the ChatGPT response. Please try again later.");
   }
 };
+module.exports = { meta, onStart };

@@ -22,7 +22,7 @@ function unloadCommand(commandName, commandsDir) {
   }
 }
 
-exports.meta = {
+const meta = {
   name: "cmd",
   aliases: [],
   prefix: "both",
@@ -41,7 +41,7 @@ exports.meta = {
   category: "admin"
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
+async function onStart({ wataru, chatId, msg, args, usages }) {
   // Make sure an action is provided.
   if (!args[0]) return await usages();
   const action = args[0].toLowerCase();
@@ -159,3 +159,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, usages }) {
     }
   }
 };
+module.exports = { meta, onStart };

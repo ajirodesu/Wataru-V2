@@ -1,4 +1,4 @@
-exports.meta = {
+const meta = {
   name: "onlyadminbox",
   aliases: ["onlyadbox", "adboxonly", "adminboxonly"],
   prefix: true, // triggered by text
@@ -13,7 +13,7 @@ exports.meta = {
   ]
 };
 
-exports.onStart = async function({ wataru, chatId, msg, args, db }) {
+async function onStart({ wataru, chatId, msg, args, db }) {
   // Determine which setting is being updated.
   let isSettingNoti = false;
   let value;
@@ -76,3 +76,4 @@ exports.onStart = async function({ wataru, chatId, msg, args, db }) {
     );
   }
 };
+module.exports = { meta, onStart };

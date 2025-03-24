@@ -215,7 +215,7 @@ const leetReplacements = {
     'g': '9'
 };
 
-exports.meta = {
+const meta = {
   name: 'devname',
   version: '1.0.0',
   description: 'Generate cool developer usernames based on your name.',
@@ -229,7 +229,7 @@ exports.meta = {
   type: 'anyone'
 };
 
-exports.onStart = async function({ msg, bot, chatId, args }) {
+async function onStart({ msg, bot, chatId, args }) {
   const generator = new DevNameGenerator();
 
   if (args.length === 0) {
@@ -322,3 +322,5 @@ Each style-specific generation creates 6 unique variations! 🎨
     );
   }
 };
+
+module.exports = { meta, onStart };
