@@ -9,39 +9,21 @@ const meta = {
   guide: [""],
 };
 
-async function onStart ({ bot, msg }) {
+async function onStart({ bot, msg }) {
   const chatId = msg.chat.id;
   const choices = ["rock", "paper", "scissors"];
   const emojis = { rock: "🪨", paper: "📄", scissors: "✂️" };
 
   // Build the inline keyboard with placeholder gameMessageId.
   const inlineKeyboard = [
-    [
-      {
-        text: "Rock 🪨",
-        callback_data: JSON.stringify({
-          command: "rps",
-          gameMessageId: null,
-          args: ["rock"]
-        }),
-      },
-      {
-        text: "Paper 📄",
-        callback_data: JSON.stringify({
-          command: "rps",
-          gameMessageId: null,
-          args: ["paper"]
-        }),
-      },
-      {
-        text: "Scissors ✂️",
-        callback_data: JSON.stringify({
-          command: "rps",
-          gameMessageId: null,
-          args: ["scissors"]
-        }),
-      },
-    ],
+    choices.map(choice => ({
+      text: `${choice.charAt(0).toUpperCase() + choice.slice(1)} ${emojis[choice]}`,
+      callback_data: JSON.stringify({
+        command: "rps",
+        gameMessageId: null,
+        args: [choice]
+      }),
+    })),
   ];
 
   let gameMessage;
@@ -55,34 +37,16 @@ async function onStart ({ bot, msg }) {
     return;
   }
 
-  // Update the inline keyboard so that each button's callback_data includes the actual gameMessageId.
+  // Update the inline keyboard so that each button includes the actual gameMessageId.
   const updatedKeyboard = [
-    [
-      {
-        text: "Rock 🪨",
-        callback_data: JSON.stringify({
-          command: "rps",
-          gameMessageId: gameMessage.message_id,
-          args: ["rock"]
-        }),
-      },
-      {
-        text: "Paper 📄",
-        callback_data: JSON.stringify({
-          command: "rps",
-          gameMessageId: gameMessage.message_id,
-          args: ["paper"]
-        }),
-      },
-      {
-        text: "Scissors ✂️",
-        callback_data: JSON.stringify({
-          command: "rps",
-          gameMessageId: gameMessage.message_id,
-          args: ["scissors"]
-        }),
-      },
-    ],
+    choices.map(choice => ({
+      text: `${choice.charAt(0).toUpperCase() + choice.slice(1)} ${emojis[choice]}`,
+      callback_data: JSON.stringify({
+        command: "rps",
+        gameMessageId: gameMessage.message_id,
+        args: [choice]
+      }),
+    })),
   ];
   try {
     await bot.editMessageReplyMarkup(
@@ -95,39 +59,35 @@ async function onStart ({ bot, msg }) {
 };
 
 async function onCallback({ bot, callbackQuery, payload }) {
-  // payload is already parsed by the global callback handler
+  // Make sure the callback is for RPS and the game message matches.
+  if (payload.command !== "rps" || !payload.gameMessageId || callbackQuery.message.message_id !== payload.gameMessageId) return;
+
   const choices = ["rock", "paper", "scissors"];
   const emojis = { rock: "🪨", paper: "📄", scissors: "✂️" };
+  const playerChoice = payload.args[0];
+
+  if (!choices.includes(playerChoice)) {
+    return bot.answerCallbackQuery(callbackQuery.id, { text: "Invalid choice." });
+  }
+
+  // Bot randomly picks a choice.
+  const botChoice = choices[Math.floor(Math.random() * choices.length)];
+
+  // Determine the outcome.
+  let result;
+  if (playerChoice === botChoice) {
+    result = "It's a tie!";
+  } else if (
+    (playerChoice === "rock" && botChoice === "scissors") ||
+    (playerChoice === "paper" && botChoice === "rock") ||
+    (playerChoice === "scissors" && botChoice === "paper")
+  ) {
+    result = "You win!";
+  } else {
+    result = "You lose!";
+  }
 
   try {
-    // Validate that this callback is for the RPS command and for the correct game message.
-    if (payload.command !== "rps") return;
-    if (!payload.gameMessageId || callbackQuery.message.message_id !== payload.gameMessageId) return;
-
-    // Retrieve the player's choice from the payload.
-    const playerChoice = payload.args[0];
-    if (!choices.includes(playerChoice)) {
-      await bot.answerCallbackQuery(callbackQuery.id, { text: "Invalid choice." });
-      return;
-    }
-
-    // Bot randomly picks a choice.
-    const botChoice = choices[Math.floor(Math.random() * choices.length)];
-
-    // Determine the game outcome.
-    let result;
-    if (playerChoice === botChoice) {
-      result = "It's a tie!";
-    } else if (
-      (playerChoice === "rock" && botChoice === "scissors") ||
-      (playerChoice === "paper" && botChoice === "rock") ||
-      (playerChoice === "scissors" && botChoice === "paper")
-    ) {
-      result = "You win!";
-    } else {
-      result = "You lose!";
-    }
-
     // Update the game message to show the outcome and remove the inline keyboard.
     await bot.editMessageText(
       `You chose ${emojis[playerChoice]}\nI chose ${emojis[botChoice]}\n\n${result}`,
@@ -137,15 +97,11 @@ async function onCallback({ bot, callbackQuery, payload }) {
         reply_markup: { inline_keyboard: [] },
       }
     );
-
     await bot.answerCallbackQuery(callbackQuery.id);
   } catch (err) {
     console.error(`Error in RPS callback: ${err.message}`);
-    try {
-      await bot.answerCallbackQuery(callbackQuery.id, { text: "An error occurred. Please try again." });
-    } catch (innerErr) {
-      console.error(`Failed to answer callback query: ${innerErr.message}`);
-    }
+    await bot.answerCallbackQuery(callbackQuery.id, { text: "An error occurred. Please try again." })
+      .catch(console.error);
   }
 };
 

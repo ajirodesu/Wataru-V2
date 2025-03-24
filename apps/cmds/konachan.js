@@ -1,56 +1,138 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-async function fetchKonachanImage() {
+const meta = {
+  name: "konachan",
+  version: "1.0.0",
+  description: "Fetch a random Konachan image",
+  author: "YourName",
+  type: "anyone",
+  cooldown: 5,
+  category: "anime",
+  guide: [""],
+};
+
+async function fetchKonachan() {
   try {
     const { data } = await axios.get('https://konachan.net/post?tags=order%3Arandom');
     const $ = cheerio.load(data);
-    const imgLinks = [];
-
-    $('#post-list-posts a.directlink.largeimg').each((_, el) => {
-      const link = $(el).attr('href');
-      if (link) imgLinks.push(link);
+    let images = [];
+    $('#post-list-posts a.directlink.largeimg').each((index, element) => {
+      const imgUrl = $(element).attr('href');
+      images.push(imgUrl);
     });
-
-    return imgLinks.length ? imgLinks[Math.floor(Math.random() * imgLinks.length)] : null;
+    // Select a random image from the array
+    return images[Math.floor(Math.random() * images.length)];
   } catch (error) {
     console.error("Error fetching Konachan image:", error);
     return null;
   }
 }
 
-const meta = {
-  name: 'konachan',
-  version: '1.0.0',
-  description: 'Fetches a random anime image from Konachan.',
-  author: 'Converted by ChatGPT',
-  type: 'anyone',
-  cooldown: 5,
-  category: 'anime',
-  guide: ['']
-};
-
-async function onStart({ bot, msg, db }) {
+async function onStart({ bot, msg }) {
   const chatId = msg.chat.id;
+  const imageUrl = await fetchKonachan();
+  if (!imageUrl) return bot.sendMessage(chatId, "Error fetching image.");
 
-  // Send a loading message
-  const loadingMsg = await bot.sendMessage(chatId, '🔄 Fetching a random anime image...');
+  // Create inline keyboard with a refresh button (placeholder for message id)
+  const inlineKeyboard = [
+    [
+      {
+        text: "🔁",
+        callback_data: JSON.stringify({
+          command: "konachan",
+          gameMessageId: null,
+          args: ["refresh"]
+        }),
+      }
+    ]
+  ];
 
-  // Fetch the image
-  const imageUrl = await fetchKonachanImage();
-  if (!imageUrl) {
-    await bot.deleteMessage(chatId, loadingMsg.message_id);
-    return bot.sendMessage(chatId, '❌ Failed to fetch an image. Please try again.');
+  let sentMessage;
+  try {
+    // Send the photo with inline keyboard
+    sentMessage = await bot.sendPhoto(chatId, imageUrl, {
+      caption: "Random Konachan image",
+      reply_markup: { inline_keyboard: inlineKeyboard }
+    });
+  } catch (err) {
+    console.error("Error sending photo:", err);
+    return bot.sendMessage(chatId, "Error sending image.");
   }
 
-  // Delete the loading message.
-  await bot.deleteMessage(chatId, loadingMsg.message_id);
+  // Update the inline keyboard to include the actual message id for callback validation
+  const updatedKeyboard = [
+    [
+      {
+        text: "🔁",
+        callback_data: JSON.stringify({
+          command: "konachan",
+          gameMessageId: sentMessage.message_id,
+          args: ["refresh"]
+        }),
+      }
+    ]
+  ];
 
-  // Send the photo without an inline button.
-  await bot.sendPhoto(chatId, imageUrl, {
-    caption: "<b>🎴 Random Konachan Image</b>",
-    parse_mode: 'HTML'
-  });
-};
+  try {
+    await bot.editMessageReplyMarkup(
+      { inline_keyboard: updatedKeyboard },
+      { chat_id: chatId, message_id: sentMessage.message_id }
+    );
+  } catch (err) {
+    console.error("Failed to update inline keyboard:", err.message);
+  }
+}
 
-module.exports = { meta, onStart };
+async function onCallback({ bot, callbackQuery, payload }) {
+  try {
+    // Validate that the callback is for the Konachan command and the message ids match.
+    if (payload.command !== "konachan") return;
+    if (!payload.gameMessageId || callbackQuery.message.message_id !== payload.gameMessageId) return;
+
+    const imageUrl = await fetchKonachan();
+    if (!imageUrl) {
+      await bot.answerCallbackQuery(callbackQuery.id, { text: "Error fetching image." });
+      return;
+    }
+
+    // Build updated inline keyboard with the same refresh button
+    const updatedKeyboard = [
+      [
+        {
+          text: "🔁",
+          callback_data: JSON.stringify({
+            command: "konachan",
+            gameMessageId: payload.gameMessageId,
+            args: ["refresh"]
+          }),
+        }
+      ]
+    ];
+
+    // Edit the message with a new photo using editMessageMedia.
+    await bot.editMessageMedia(
+      {
+        type: "photo",
+        media: imageUrl,
+        caption: "Random Konachan image"
+      },
+      {
+        chat_id: callbackQuery.message.chat.id,
+        message_id: payload.gameMessageId,
+        reply_markup: { inline_keyboard: updatedKeyboard }
+      }
+    );
+
+    await bot.answerCallbackQuery(callbackQuery.id);
+  } catch (err) {
+    console.error("Error in Konachan callback:", err.message);
+    try {
+      await bot.answerCallbackQuery(callbackQuery.id, { text: "An error occurred. Please try again." });
+    } catch (innerErr) {
+      console.error("Failed to answer callback query:", innerErr.message);
+    }
+  }
+}
+
+module.exports = { meta, onStart, onCallback };

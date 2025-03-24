@@ -2,87 +2,106 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
-const baseApiUrl = async () => {
-  const base = await axios.get(
-    `https://raw.githubusercontent.com/Blankid018/D1PT0/main/baseApiUrl.json`
-  );
-  return base.data.api;
-};
+// Define a single base API URL for Hazeyyyy’s endpoints.
+const BASE_API = "https://hazeyyyy-rest-apis.onrender.com/api";
 
 const meta = {
   name: "downloader",
   keyword: [
     "https://vt.tiktok.com",
     "https://www.tiktok.com/",
+    "https://vm.tiktok.com",
     "https://www.facebook.com",
-    "https://www.instagram.com/",
+    "https://fb.watch",
     "https://youtu.be/",
     "https://youtube.com/",
-    "https://x.com/",
-    "https://twitter.com/",
-    "https://vm.tiktok.com",
-    "https://fb.watch",
-  ], // URLs to detect
+    "https://www.instagram.com/",
+    "https://pin.it",
+    "https://pinterest.com",
+  ],
   aliases: [],
-  version: "1.0.1",
-  author: "Dipto",
-  description: "Auto downloads videos from social media platforms.",
+  version: "1.0.3",
+  author: "AjiroDesu",
+  description: "Auto downloads videos from supported social media platforms.",
   guide: ["[video_link]"],
   cooldown: 0,
   type: "anyone",
   category: "media",
 };
 
-// Triggered when the command is invoked directly (e.g., /autodl).
-async function onStart ({ bot, msg, chatId }) {
+async function onStart({ bot, msg, chatId }) {
   await bot.sendMessage(
     chatId,
-    "Send a video link, and I'll download it for you!",
+    "Send a video link from Facebook, Pinterest, YouTube, TikTok, or Instagram, and I'll download it for you!",
     { parse_mode: "HTML" }
   );
-};
+}
 
-// Triggered when a message contains a supported URL.
 async function onWord({ bot, msg, chatId, args }) {
   const messageText = msg.link_preview_options?.url || msg.text || "";
-
-  // Check if the message contains a supported URL
-  const detectedUrl = meta.keyword.find((url) =>
-    messageText.startsWith(url)
-  );
-
-  if (!detectedUrl) return;
+  // Check if the message contains one of the supported URL keywords
+  const detectedUrl = meta.keyword.find((url) => messageText.startsWith(url));
+  if (!detectedUrl) return; // Ignore unsupported media
 
   try {
     const messageId = msg.message_id;
-
-    // Send "processing" message
-    const wait = await bot.sendMessage(chatId, "⏳ Processing your request...", {
-      reply_to_message_id: messageId,
-    });
-
+    // Notify the user that processing has started
+    const wait = await bot.sendMessage(
+      chatId,
+      "⏳ Processing your request...",
+      { reply_to_message_id: messageId }
+    );
     const waitMId = wait.message_id;
     const videoPath = path.join(__dirname, "..", "temp", "downloaded_video.mp4");
+    const encodedUrl = encodeURIComponent(messageText);
 
-    // Fetch video download link
-    const { data } = await axios.get(
-      `${await baseApiUrl()}/alldl?url=${encodeURIComponent(messageText)}`
-    );
+    let apiUrl;
+    let videoKey; // key to extract the video URL from the response
+
+    if (messageText.includes("facebook.com") || messageText.includes("fb.watch")) {
+      apiUrl = `${BASE_API}/facebookdl?url=${encodedUrl}`;
+      videoKey = "facebook";
+    } else if (messageText.includes("pin.it") || messageText.includes("pinterest.com")) {
+      apiUrl = `${BASE_API}/pinterestdl?url=${encodedUrl}`;
+      videoKey = "pinterest";
+    } else if (messageText.includes("youtu")) {
+      apiUrl = `${BASE_API}/youtubedl?url=${encodedUrl}`;
+      videoKey = "youtube";
+    } else if (messageText.includes("tiktok")) {
+      apiUrl = `${BASE_API}/tiktokdl?url=${encodedUrl}`;
+      videoKey = "tiktok";
+    } else if (messageText.includes("instagram.com")) {
+      apiUrl = `${BASE_API}/instadl?url=${encodedUrl}`;
+      videoKey = "instagram";
+    } else {
+      // Should never reach here since unsupported media are ignored
+      return;
+    }
+
+    // Fetch the download link using the chosen endpoint
+    const { data } = await axios.get(apiUrl);
+    const videoUrl = data[videoKey];
+    if (!videoUrl) {
+      throw new Error("Video URL not found in response.");
+    }
+
+    // Download the video data
     const videoBuffer = (
-      await axios.get(data.result, { responseType: "arraybuffer" })
+      await axios.get(videoUrl, { responseType: "arraybuffer" })
     ).data;
+    fs.writeFileSync(videoPath, Buffer.from(videoBuffer));
 
-    fs.writeFileSync(videoPath, Buffer.from(videoBuffer, "utf-8"));
-
-    // Delete "processing" message
+    // Remove the "processing" message
     await bot.deleteMessage(chatId, waitMId);
 
-    // Send downloaded video
+    // Use the cp field as caption if available
+    const caption = data.cp || "";
+    // Send the downloaded video file
     await bot.sendVideo(
       chatId,
       videoPath,
       {
-        caption: `${data.cp || ""} ✅`,
+        caption: `${caption} ✅`,
         reply_to_message_id: messageId,
       },
       {
@@ -95,5 +114,6 @@ async function onWord({ bot, msg, chatId, args }) {
   } catch (error) {
     await bot.sendMessage(chatId, `❎ Error: ${error.message}`);
   }
-};
+}
+
 module.exports = { meta, onStart, onWord };

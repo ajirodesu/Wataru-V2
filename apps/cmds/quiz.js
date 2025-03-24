@@ -71,39 +71,42 @@ async function onStart({ wataru, chatId }) {
  * @param {Array} params.args - The arguments from the callback data.
  */
 async function onCallback({ bot, callbackQuery, chatId, messageId, args }) {
-  // Since callback data is quiz:<quizId>:<answerIndex>,
-  // args will be ['quizId', 'answerIndex'] after parsing
+  // Destructure quizId and answerIndex from the callback arguments.
   const [quizId, answerIndexStr] = args;
   const answerIndex = parseInt(answerIndexStr, 10);
 
-  if (quizData.has(quizId)) {
-    const quiz = quizData.get(quizId);
-    const isCorrect = answerIndex === quiz.correctIndex;
-    const resultText = isCorrect 
-      ? "Correct!" 
-      : `Wrong! The correct answer is ${quiz.shuffledAnswers[quiz.correctIndex]}`;
-
-    try {
-      // Edit the original message with the result and remove buttons
-      await bot.editMessageText(resultText, {
-        chat_id: chatId,
-        message_id: messageId,
-        reply_markup: { inline_keyboard: [] }
-      });
-
-      // Acknowledge the callback query to remove the loading state
-      await bot.answerCallbackQuery(callbackQuery.id);
-    } catch (error) {
-      console.error("Error editing message:", error);
-    }
-
-    // Clean up quiz data after answering
-    quizData.delete(quizId);
+  // If no quiz data exists, answer the callback and exit.
+  if (!quizData.has(quizId)) {
+    return await bot.answerCallbackQuery(callbackQuery.id, { text: "Quiz not found or expired." });
   }
-};
+
+  const quiz = quizData.get(quizId);
+  const isCorrect = answerIndex === quiz.correctIndex;
+  const resultText = isCorrect 
+    ? "Correct!" 
+    : `Wrong! The correct answer is ${quiz.shuffledAnswers[quiz.correctIndex]}`;
+
+  // Helper to update the original message.
+  const updateMessage = () =>
+    bot.editMessageText(resultText, {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: { inline_keyboard: [] }
+    });
+
+  try {
+    await updateMessage();
+    await bot.answerCallbackQuery(callbackQuery.id);
+  } catch (error) {
+    console.error("Error editing message:", error);
+  }
+
+  // Clean up quiz data after answering.
+  quizData.delete(quizId);
+}
 
 /**
- * Shuffles an array randomly using Fisher-Yates algorithm.
+ * Shuffles an array randomly using the Fisher-Yates algorithm.
  * @param {Array} array - The array to shuffle.
  * @returns {Array} The shuffled array.
  */
@@ -114,4 +117,5 @@ function shuffle(array) {
   }
   return array;
 }
+
 module.exports = { meta, onStart, onCallback };

@@ -7,42 +7,34 @@
  * @param {Object} options.wataru - The wataru instance
  */
 exports.callback = function({ bot, msg, chatId, wataru, db }) {
-  // Store the existing listener to avoid duplicate registrations
+  // Remove existing handler if present to avoid duplicates.
   if (bot._callbackHandler) {
     bot.removeListener('callback_query', bot._callbackHandler);
   }
 
-  // Create the callback handler
+  // Helper to parse callback data.
+  const parsePayload = (data) => {
+    try {
+      return JSON.parse(data);
+    } catch (err) {
+      const parts = data.split(':');
+      return parts.length ? { command: parts[0], args: parts.slice(1) } : null;
+    }
+  };
+
+  // Centralized callback handler.
   bot._callbackHandler = async (callbackQuery) => {
-    if (!callbackQuery || !callbackQuery.data) {
+    if (!callbackQuery?.data) {
       console.error('Invalid callback query received:', callbackQuery);
       return;
     }
 
-    let payload;
-    try {
-      // Attempt to parse the callback data as JSON
-      payload = JSON.parse(callbackQuery.data);
-    } catch (err) {
-      // Fallback to colon-separated data
-      const parts = callbackQuery.data.split(':');
-      if (!parts.length) {
-        console.error('Invalid callback data format:', callbackQuery.data);
-        return;
-      }
-      payload = { command: parts[0], args: parts.slice(1) };
-    }
-
-    if (!payload.command) {
+    const payload = parsePayload(callbackQuery.data);
+    if (!payload || !payload.command) {
       console.error('No command found in payload:', payload);
-      try {
-        await bot.answerCallbackQuery(callbackQuery.id, {
-          text: "Invalid callback format."
-        });
-      } catch (error) {
-        console.error('Failed to answer invalid callback query:', error);
-      }
-      return;
+      return bot.answerCallbackQuery(callbackQuery.id, {
+        text: "Invalid callback format."
+      }).catch(console.error);
     }
 
     const { commands } = global.client;
@@ -52,28 +44,18 @@ exports.callback = function({ bot, msg, chatId, wataru, db }) {
     }
 
     const command = commands.get(payload.command);
-
     if (!command || typeof command.onCallback !== 'function') {
       console.error(`No valid onCallback handler found for command: ${payload.command}`);
-      try {
-        await bot.answerCallbackQuery(callbackQuery.id, {
-          text: "Command not found.",
-          show_alert: true
-        });
-      } catch (error) {
-        console.error('Failed to answer callback query:', error);
-      }
-      return;
+      return bot.answerCallbackQuery(callbackQuery.id, {
+        text: "Command not found.",
+        show_alert: true
+      }).catch(console.error);
     }
 
     try {
-      // Ensure message exists before accessing chat.id
       const messageId = callbackQuery.message?.message_id;
       const chatId = callbackQuery.message?.chat?.id;
-
-      if (!chatId) {
-        throw new Error('Chat ID not found in callback query');
-      }
+      if (!chatId) throw new Error('Chat ID not found in callback query');
 
       await command.onCallback({
         bot,
@@ -85,23 +67,18 @@ exports.callback = function({ bot, msg, chatId, wataru, db }) {
         db
       });
 
-      // Answer the callback query if not already answered
       if (!callbackQuery.answered) {
         await bot.answerCallbackQuery(callbackQuery.id);
       }
     } catch (error) {
       console.error(`Error executing onCallback for command "${payload.command}":`, error);
-      try {
-        await bot.answerCallbackQuery(callbackQuery.id, {
-          text: "An error occurred. Please try again.",
-          show_alert: true
-        });
-      } catch (innerError) {
-        console.error('Failed to answer error callback:', innerError);
-      }
+      await bot.answerCallbackQuery(callbackQuery.id, {
+        text: "An error occurred. Please try again.",
+        show_alert: true
+      }).catch(console.error);
     }
   };
 
-  // Register the new handler
+  // Register the new handler.
   bot.on('callback_query', bot._callbackHandler);
 };

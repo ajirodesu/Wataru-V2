@@ -1,7 +1,7 @@
 const meta = {
   name: "balance",
   version: "1.0.0",
-  aliases: ["bal", "coin", "coins", "money"],
+  aliases: ["bal", "coin", "coins", "money", "wallet"],
   description: "Check your balance",
   author: "AjiroDesu",
   prefix: "both",

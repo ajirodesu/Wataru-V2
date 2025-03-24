@@ -13,27 +13,37 @@ const meta = {
 
 const COMMANDS_PER_PAGE = 10;
 
-async function onStart ({ bot, chatId, msg, wataru, db }) {
+/**
+ * Determines the effective prefix for the current chat.
+ * @param {number|string} chatId - The chat ID.
+ * @param {string} chatType - The type of the chat.
+ * @param {Object} db - Database instance.
+ * @param {string} defaultPrefix - The default global prefix.
+ * @returns {Promise<string>}
+ */
+async function getEffectivePrefix(chatId, chatType, db, defaultPrefix) {
+  let effectivePrefix = defaultPrefix;
+  if (["group", "supergroup"].includes(chatType)) {
+    const group = await db.getGroup(chatId);
+    if (group && group.prefix && group.prefix.trim() !== "") {
+      effectivePrefix = group.prefix;
+    }
+  }
+  return effectivePrefix;
+}
+
+async function onStart({ bot, chatId, msg, wataru, db }) {
   try {
     const userId = msg.from.id;
     const { commands } = global.client;
     const { admin, prefix: globalPrefix, symbols } = global.config;
     const vipUsers = global.vip.uid.includes(userId);
-    const senderID = String(msg.from.id);
+    const senderID = String(userId);
     const chatType = msg.chat.type;
     const args = msg.text.split(" ").slice(1);
     const cleanArg = args[0] ? args[0].trim().toLowerCase() : "";
 
-    // Determine the effective prefix.
-    let effectivePrefix = globalPrefix;
-    if (["group", "supergroup"].includes(chatType)) {
-      const group = await db.getGroup(chatId);
-      if (group && group.prefix && group.prefix.trim() !== "") {
-        effectivePrefix = group.prefix;
-      }
-    }
-
-    // If an argument matches a command (by name or alias), show its detailed info.
+    // If an argument matches a command, show its detailed info.
     if (cleanArg) {
       const command =
         commands.get(cleanArg) ||
@@ -43,21 +53,22 @@ async function onStart ({ bot, chatId, msg, wataru, db }) {
             cmd.meta.aliases.map((alias) => alias.toLowerCase()).includes(cleanArg)
         );
       if (command) {
-        const helpMessage = generateCommandInfo(command.meta, effectivePrefix);
+        const helpMessage = generateCommandInfo(command.meta, globalPrefix);
         return await wataru.reply(helpMessage, { parse_mode: "Markdown" });
       }
     }
 
-    // Determine whether to show all commands or paginate.
+    // Determine pagination or all-commands.
     const isAll = cleanArg === "all" || cleanArg === "-all" || cleanArg === "-a";
     const parsedPage = parseInt(cleanArg);
     const pageNumber = !isAll && !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
-    // Check user permissions.
+    // Get effective prefix and permission flags.
+    const effectivePrefix = await getEffectivePrefix(chatId, chatType, db, globalPrefix);
     const isBotAdmin = admin.includes(senderID);
     const isGroupAdmin = await checkGroupAdmin(bot, chatId, senderID, chatType);
 
-    // Generate help message and inline navigation (if applicable).
+    // Generate help message and inline navigation.
     const { helpMessage, replyMarkup } = generateHelpMessage(
       commands,
       senderID,
@@ -71,7 +82,7 @@ async function onStart ({ bot, chatId, msg, wataru, db }) {
       chatType
     );
 
-    // Send the help message with inline navigation using wataru.reply.
+    // Send help message.
     const sentMsg = await wataru.reply(helpMessage, {
       parse_mode: "Markdown",
       reply_markup:
@@ -80,7 +91,7 @@ async function onStart ({ bot, chatId, msg, wataru, db }) {
           : undefined,
     });
 
-    // Create a unique session ID and store session details.
+    // Create a unique session ID and store details.
     const instanceId = "help_" + Date.now().toString();
     global.client.callbacks.set(instanceId, {
       senderID,
@@ -88,7 +99,7 @@ async function onStart ({ bot, chatId, msg, wataru, db }) {
       chatId,
     });
 
-    // Update inline buttons so that each callback data includes the instanceId.
+    // Update inline buttons with instanceId.
     if (replyMarkup && replyMarkup.inline_keyboard && replyMarkup.inline_keyboard.length) {
       const newReplyMarkup = updateReplyMarkupWithInstanceId(replyMarkup, instanceId);
       await bot.editMessageReplyMarkup(newReplyMarkup, { chat_id: chatId, message_id: sentMsg.message_id });
@@ -96,13 +107,19 @@ async function onStart ({ bot, chatId, msg, wataru, db }) {
   } catch (error) {
     console.error("Error in help command onStart:", error);
   }
-};
+}
 
-async function onCallback({ bot, callbackQuery, chatId, args, payload, db }) {
+async function onCallback({ bot, callbackQuery, db }) {
   try {
-    // Ensure this callback is for the help command.
-    if (!payload || payload.command !== "help") return;
-    if (!payload.instanceId) return;
+    // Verify that the callback payload is for the help command.
+    if (!callbackQuery || !callbackQuery.data) return;
+    let payload;
+    try {
+      payload = JSON.parse(callbackQuery.data);
+    } catch (e) {
+      return; // Invalid payload
+    }
+    if (payload.command !== "help" || !payload.instanceId) return;
 
     const session = global.client.callbacks.get(payload.instanceId);
     if (!session) return;
@@ -116,15 +133,7 @@ async function onCallback({ bot, callbackQuery, chatId, args, payload, db }) {
     const chat_id = callbackQuery.message.chat.id;
     const chatType = callbackQuery.message.chat.type;
 
-    // Determine effective prefix.
-    let effectivePrefix = globalPrefix;
-    if (["group", "supergroup"].includes(chatType)) {
-      const group = await db.getGroup(chat_id);
-      if (group && group.prefix && group.prefix.trim() !== "") {
-        effectivePrefix = group.prefix;
-      }
-    }
-
+    const effectivePrefix = await getEffectivePrefix(chat_id, chatType, db, globalPrefix);
     const isBotAdmin = admin.includes(senderID);
     const isGroupAdmin = await checkGroupAdmin(bot, chat_id, senderID, chatType);
 
@@ -134,33 +143,31 @@ async function onCallback({ bot, callbackQuery, chatId, args, payload, db }) {
       isBotAdmin,
       isGroupAdmin,
       newPageNumber,
-      null, // no cleanArg during callback
+      null, // cleanArg not needed for callbacks
       effectivePrefix,
       symbols,
       vipUsers,
       chatType
     );
-
     const newReplyMarkup =
       replyMarkup && replyMarkup.inline_keyboard && replyMarkup.inline_keyboard.length
         ? updateReplyMarkupWithInstanceId(replyMarkup, payload.instanceId)
         : undefined;
 
     await bot.editMessageText(helpMessage, {
-      chat_id: chat_id,
+      chat_id,
       message_id: callbackQuery.message.message_id,
       parse_mode: "Markdown",
       reply_markup: newReplyMarkup,
     });
 
-    // Update session's helpMessageId.
+    // Update session details.
     session.helpMessageId = callbackQuery.message.message_id;
-
     await bot.answerCallbackQuery(callbackQuery.id);
   } catch (error) {
     console.error("Error in help command onCallback:", error);
   }
-};
+}
 
 /* Helper Functions */
 
@@ -340,4 +347,5 @@ function capitalize(text) {
   if (!text) return "";
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
 module.exports = { meta, onStart, onCallback };

@@ -86,55 +86,44 @@ async function onStart({ bot, chatId, msg, args, wataru, db }) {
       reply_markup: { inline_keyboard: [[confirmButton]] }
     }
   );
-};
+}
 
 async function onCallback({ bot, callbackQuery, chatId, wataru, db }) {
-  // Parse the callback data.
+  // Helper to update the confirmation message.
+  const updateMessage = (text) =>
+    bot.editMessageText(text, {
+      chat_id: chatId,
+      message_id: callbackQuery.message.message_id
+    });
+
+  // Parse the callback data and extract the new prefix.
   let payload;
   try {
     payload = JSON.parse(callbackQuery.data);
   } catch (err) {
     console.error("Error parsing callback data:", err);
-    return await bot.editMessageText(
-      `❌ Invalid callback data.`,
-      { chat_id: chatId, message_id: callbackQuery.message.message_id }
-    );
+    return updateMessage("❌ Invalid callback data.");
   }
+  const newPrefix = payload.newPrefix?.trim();
+  if (!newPrefix) return updateMessage("❌ Invalid prefix provided.");
 
-  // Validate that the newPrefix is provided.
-  if (!payload.newPrefix || payload.newPrefix.trim() === "") {
-    return await bot.editMessageText(
-      `❌ Invalid prefix provided.`,
-      { chat_id: chatId, message_id: callbackQuery.message.message_id }
-    );
-  }
-  const newPrefix = payload.newPrefix.trim();
-
-  // Retrieve the current group record.
-  let group = await db.getGroup(chatId);
-  if (!group) {
-    // If the group is not registered, create a new record with the new prefix.
-    group = {
+  // Update or create the group record with the new prefix.
+  const group = await db.getGroup(chatId);
+  if (group) {
+    await db.updateGroupPrefix(chatId, newPrefix);
+  } else {
+    await db.upsertGroup({
       group_id: chatId,
       title: "",
       description: "",
       rules: "",
       prefix: newPrefix,
       banned: 0
-    };
-    await db.upsertGroup(group);
-  } else {
-    // Otherwise, update the group's prefix.
-    await db.updateGroupPrefix(chatId, newPrefix);
+    });
   }
 
-  // Edit the original confirmation message to show the updated result.
-  await bot.editMessageText(
-    `✅ Group prefix has been updated to "${newPrefix}".`,
-    {
-      chat_id: chatId,
-      message_id: callbackQuery.message.message_id
-    }
-  );
-};
+  // Update the original confirmation message.
+  return updateMessage(`✅ Group prefix has been updated to "${newPrefix}".`);
+}
+
 module.exports = { meta, onStart, onCallback };
