@@ -6,7 +6,7 @@ const meta = {
   aliases: ["animenews", "news"],
   prefix: "both",
   version: "1.0.0",
-  author: "Your Name",
+  author: "AjiroDesu",
   description: "Fetches the latest anime news from Anime News Network.",
   guide: [],
   cooldown: 5,
