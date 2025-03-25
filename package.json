@@ -1,6 +1,6 @@
 {
-  "name": "wataru",
-  "version": "1.0.0",
+  "name": "wataru-v2",
+  "version": "2.0.5",
   "description": "A simple Telegram Bot made by AjiroDesu",
   "main": "index.js",
   "scripts": {
