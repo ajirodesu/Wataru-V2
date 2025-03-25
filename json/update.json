@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/ajirodesu/wataru-v2.git",
+  "branch": "main",
+  "preserve": ["json"],
+  "backup": "system/backups"
+}
