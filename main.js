@@ -37,9 +37,9 @@ function watchJSONFile(filename, globalKey) {
   // Initial load with error handling
   try {
     global[globalKey] = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
-    console.log(`Loaded ${filename} successfully`);
+    console.log(`Loaded ${baseFilename} successfully`);
   } catch (error) {
-    console.error(`Error loading ${filename}:`, error);
+    console.error(`Error loading ${baseFilename}:`, error);
     global[globalKey] = {}; // Set default empty object to prevent crashes
   }
 
@@ -52,9 +52,9 @@ function watchJSONFile(filename, globalKey) {
         try {
           const newData = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
           global[globalKey] = newData;
-          console.log(`Reloaded ${filename} successfully`);
+          console.log(`Reloaded ${baseFilename} successfully`);
         } catch (error) {
-          console.error(`Error reloading ${filename}:`, error);
+          console.error(`Error reloading ${baseFilename}:`, error);
           // Don't update global object if JSON is invalid
         }
       }, 100); // 100ms debounce
@@ -101,9 +101,9 @@ async function initBot() {
     // Load commands and events
     const errors = await loadAll();
     if (errors && errors.length > 0) {
-      console.error('Errors loading commands:', errors);
+      console.error('Errors loading commands and events:', errors);
     } else {
-      console.log('All commands loaded successfully.');
+      console.log('All commands and events loaded successfully.');
     }
 
     // Set up message listener with better error handling

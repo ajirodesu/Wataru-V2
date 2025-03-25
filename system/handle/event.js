@@ -21,9 +21,18 @@ exports.event = async function({ bot, msg, chatId, wataru }) {
           await eventHandler.onStart(context); // Execute the event handler
 
           if (devMode) {
-            console.log(
-              `[ Event ] Executed "${eventHandler.meta.name}" at ${formattedTime} in ${Date.now() - timeStart}ms`
-            );
+            const executionTime = Date.now() - timeStart;
+            const consoleWidth = process.stdout.columns || 60;
+            const separator = "─".repeat(consoleWidth);
+            const logMessage = `
+${separator}
+[ DEV MODE ]
+Event           : ${eventHandler.meta.name}
+Time            : ${formattedTime}
+Execution Time  : ${executionTime}ms
+${separator}
+            `.trim();
+            console.log(logMessage);
           }
         } catch (error) {
           console.error(`[ Event Error ] ${eventHandler.meta.name}:`, error);

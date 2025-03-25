@@ -186,12 +186,20 @@ exports.command = async function ({ bot, wataru, msg, chatId, args, db }) {
     await command.onStart(context);
 
     if (devMode === true) {
-      console.log(
-        `Executed command "${commandName}" at ${time} from ${senderID} with arguments: ${commandArgs.join(" ")} in ${
-          Date.now() - dateNow
-        }ms`,
-        "[ DEV MODE ]"
-      );
+      const executionTime = Date.now() - dateNow;
+      const consoleWidth = process.stdout.columns || 60;
+      const separator = "─".repeat(consoleWidth);
+      const logMessage = `
+${separator}
+[ DEV MODE ]
+Command         : ${commandName}
+Time            : ${time}
+Sender ID       : ${senderID}
+Arguments       : ${commandArgs.join(" ") || "None"}
+Execution Time  : ${executionTime}ms
+${separator}
+      `.trim();
+      console.log(logMessage);
     }
   } catch (e) {
     console.error(`Error executing command "${commandName}":`, e);

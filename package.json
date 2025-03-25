@@ -13,6 +13,7 @@
     "@nechlophomeriaa/spotifydl": "^1.0.4",
     "@types/node": "^18.0.6",
     "body-parser": "^1.20.3",
+    "chalk": "^4.1.2",
     "cheerio": "^1.0.0",
     "express": "^4.21.2",
     "fs-extra": "^11.2.0",
