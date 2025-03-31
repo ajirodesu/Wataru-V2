@@ -10,7 +10,7 @@ const meta = {
   guide: [],
   cooldown: 5,
   type: "anyone",
-  category: "fun"
+  category: "anime"
 };
 
 async function fetchAnimeme() {

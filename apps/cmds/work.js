@@ -18,12 +18,12 @@ const meta = {
   aliases: ["wk"],
   prefix: "both",
   version: "1.0.0",
-  author: "XaviaTeam | Liane (Adapted to Wataru)",
+  author: "XaviaTeam | Lance (Adapted to Wataru)",
   description: "Work to earn money",
   guide: [""],
   cooldown: 10,
   type: "anyone",
-  category: "Chance Games",
+  category: "economy",
 };
 
 async function onStart ({ wataru, chatId, msg, args, usages, db }) {

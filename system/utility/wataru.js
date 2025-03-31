@@ -1,4 +1,3 @@
-// wataru.js
 function createWataru(bot, msg, defaultParseMode) {
   const mapping = {
     reply: { botMethod: "sendMessage", autoReply: true },
@@ -19,7 +18,7 @@ function createWataru(bot, msg, defaultParseMode) {
     chatAction: { botMethod: "sendChatAction", autoReply: false },
     invoice: { botMethod: "sendInvoice", autoReply: false },
     game: { botMethod: "sendGame", autoReply: false },
-    edit: { botMethod: "editMessageText", autoReply: false}
+    edit: { botMethod: "editMessageText", autoReply: false }
   };
 
   const wataru = {};
@@ -27,32 +26,31 @@ function createWataru(bot, msg, defaultParseMode) {
   for (const alias in mapping) {
     const { botMethod, autoReply } = mapping[alias];
     if (typeof bot[botMethod] !== "function") continue;
-    wataru[alias] = function (...args) {
-      // Determine if the last argument is an options object.
-      let options;
-      if (args.length > 0) {
-        const lastArg = args[args.length - 1];
-        if (typeof lastArg === "object" && lastArg !== null && !Array.isArray(lastArg)) {
-          options = lastArg;
-        }
-      }
-      // If no options object exists, create one and push it.
-      if (!options) {
+
+    wataru[alias] = function (content, options = {}) {
+      // Ensure options is an object
+      if (typeof options !== "object" || options === null || Array.isArray(options)) {
         options = {};
-        args.push(options);
       }
-      // For autoReply-enabled methods in non-private chats, add reply_to_message_id.
+
+      // Handle parse_mode for captions
+      if (options.parse_mode === false) {
+        delete options.parse_mode; // Remove parse_mode to send caption as plain text
+      } else if (defaultParseMode && !("parse_mode" in options)) {
+        options.parse_mode = defaultParseMode; // Apply default if parse_mode isn’t specified
+      }
+
+      // Apply autoReply in non-private chats
       if (autoReply && msg.chat.type !== "private" && !("reply_to_message_id" in options)) {
         options.reply_to_message_id = msg.message_id;
       }
-      // Add default parse_mode if provided and not already specified.
-      if (defaultParseMode && !("parse_mode" in options)) {
-        options.parse_mode = defaultParseMode;
-      }
-      return bot[botMethod](msg.chat.id, ...args);
+
+      // Call the bot method with chat ID, content, and options
+      return bot[botMethod](msg.chat.id, content, options);
     };
   }
 
+  // Bind other bot methods not in mapping
   for (const key in bot) {
     if (typeof bot[key] === "function" && !wataru[key]) {
       wataru[key] = bot[key].bind(bot);

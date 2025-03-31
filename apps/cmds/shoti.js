@@ -1,55 +1,38 @@
-const axios = require("axios");
-const path = require("path");
-const fs = require("fs-extra");
-
 const meta = {
   name: "shoti",
-  aliases: [],
   version: "1.0.0",
-  author: "Jonell Magallanes",
-  description: "Random video from Shoti API By Lib API",
-  guide: [""],
-  cooldown: 10,
+  aliases: [],
+  description: "Get a random short video",
+  author: "Liby Shoti API",
+  prefix: "both",
+  category: "media",
   type: "anyone",
-  category: "media"
+  cooldown: 10,
+  guide: ""
 };
 
-async function onStart({ wataru, chatId, msg, args }) {
+async function onStart({ bot, args, wataru, msg }) {
   try {
-    // Fetch random video data from the API.
-    const response = await axios.get("https://kaiz-apis.gleeze.com/api/shoti");
-    const data = response.data.shoti;
-    const { videoUrl, title, username, nickname, region } = data;
+    // Fetch data from the API
+    const response = await fetch('https://shoti.fbbot.org/api/get-shoti');
+    if (!response.ok) throw new Error('API request failed');
 
-    // Prepare a temporary file path based on the msg.message_id.
-    const fileName = `${msg.message_id}.mp4`;
-    const filePath = path.join(__dirname, "..", "temp", fileName);
+    const data = await response.json();
+    if (data.code !== 200) throw new Error('API returned non-200 code');
 
-    // Download the video using a stream.
-    const downloadResponse = await axios({
-      method: "GET",
-      url: videoUrl,
-      responseType: "stream"
+    // Extract video URL and username
+    const videoUrl = data.result.content;
+    const username = data.result.user.username;
+
+    // Send the video with a plain text caption
+    await wataru.video(videoUrl, {
+      caption: `Shoti from @${username}`,
+      parse_mode: false // Ensure caption is plain text
     });
-    const writer = fs.createWriteStream(filePath);
-    downloadResponse.data.pipe(writer);
-
-    // Wait until the file has been fully written.
-    await new Promise((resolve, reject) => {
-      writer.on("finish", resolve);
-      writer.on("error", reject);
-    });
-
-    // Construct a caption with video details.
-    const caption = `Title: ${title}\nUsername: ${username}\nNickname: ${nickname}\nRegion: ${region}`;
-
-    // Send the video message with the caption using wataru.video (no chatId required).
-    await wataru.video(filePath, { caption });
-
-    // Remove the temporary file.
-    fs.unlinkSync(filePath);
   } catch (error) {
-    await wataru.reply(error.message);
+    console.error(`[ shoti ] » ${error}`);
+    await wataru.reply('An error occurred while fetching the video.');
   }
-};
+}
+
 module.exports = { meta, onStart };
