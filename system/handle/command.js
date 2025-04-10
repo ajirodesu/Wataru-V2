@@ -106,14 +106,23 @@ exports.command = async function ({ bot, wataru, msg, chatId, args, db }) {
   // Define a helper function to show command usages.
   const usages = () => {
     if (!command.meta.guide) return;
-    let usageText = `${symbols} Usages:\n`;
-    const displayPrefix = (command.meta.prefix === false) ? "" : effectivePrefix;
+    // Add extra new line after the title.
+    let usageText = `${symbols} Usages:\n\n`;
+    const displayPrefix = command.meta.prefix === false ? "" : effectivePrefix;
     if (Array.isArray(command.meta.guide)) {
+      // List each guide line.
       for (const guide of command.meta.guide) {
         usageText += `${displayPrefix}${command.meta.name} ${guide}\n`;
       }
+      // Append the description on the last page if provided.
+      if (command.meta.description) {
+        usageText += `\n- ${command.meta.description}`;
+      }
     } else {
       usageText += `${displayPrefix}${command.meta.name} ${command.meta.guide}`;
+      if (command.meta.description) {
+        usageText += `\n- ${command.meta.description}`;
+      }
     }
     return wataru.reply(usageText, { parse_mode: "Markdown" });
   };

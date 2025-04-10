@@ -1,5 +1,4 @@
 const axios = require('axios');
-const dipto = `${global.api.dipto}/dipto`;
 
 const meta = {
   name: "edit",
@@ -7,91 +6,84 @@ const meta = {
   version: "6.9",
   author: "dipto",
   description: "Edit images using Edit AI",
-  guide: ["Reply to an image with prompt"],
+  guide: "Reply to an image with [prompt]",
   cooldown: 5,
   type: "anyone",
   category: "AI"
 };
 
-async function handleEdit({ bot, chatId, msg, args = [] }) {
-  // Ensure the message is a reply to another message containing a photo.
-  const reply = msg.reply_to_message;
-  if (!reply || !reply.photo || reply.photo.length === 0) {
-    return bot.sendMessage(chatId, "❌ Please reply to an image to edit it.");
-  }
-
-  // Telegram returns multiple sizes; use the highest resolution.
-  const photoSizes = reply.photo;
-  const fileId = photoSizes[photoSizes.length - 1].file_id;
-
-  // Retrieve the image URL using bot.getFileLink (assumed to be available).
-  let fileUrl;
+/**
+ * Handles the image editing process by making an API call and sending the response.
+ * @param {Object} bot - The Telegram bot instance.
+ * @param {number} chatId - The chat ID where the message is sent.
+ * @param {number} messageId - The message ID to reply to.
+ * @param {string} fileUrl - The URL of the image to edit.
+ * @param {string} prompt - The prompt for editing the image.
+ */
+async function handleEdit(bot, chatId, messageId, fileUrl, prompt) {
   try {
-    fileUrl = await bot.getFileLink(fileId);
-  } catch (error) {
-    return bot.sendMessage(chatId, "❌ Unable to retrieve the image file.");
-  }
+    const apiUrl = `https://www.noobs-api.rf.gd/dipto/edit?url=${encodeURIComponent(fileUrl)}&prompt=${encodeURIComponent(prompt)}`;
+    const response = await axios.get(apiUrl, {
+      responseType: 'stream',
+      validateStatus: () => true
+    });
 
-  // Use the provided prompt or a default one.
-  const prompt = args.join(" ") || "What is this";
+    const contentType = response.headers['content-type'];
 
-  try {
-    const response = await axios.get(
-      `${dipto}/edit?url=${encodeURIComponent(fileUrl)}&prompt=${encodeURIComponent(prompt)}`,
-      {
-        responseType: 'stream',
-        validateStatus: () => true
+    if (contentType.startsWith('image/')) {
+      const sentMsg = await bot.sendPhoto(chatId, response.data, { reply_to_message_id: messageId });
+      global.client.replies.set(sentMsg.message_id, { meta: meta, type: "edit" });
+    } else if (contentType.startsWith('application/json')) {
+      let responseData = '';
+      for await (const chunk of response.data) {
+        responseData += chunk.toString();
       }
-    );
-
-    // If the API returns an image, send it as a photo.
-    if (response.headers['content-type'] && response.headers['content-type'].startsWith('image/')) {
-      const sentMsg = await bot.sendPhoto(chatId, response.data);
-      // Save the sent message so the user can reply to this edited photo for further edits.
-      global.client.replies.set(sentMsg.message_id, {
-        meta: meta,
-        command: meta.name,
-        author: msg.from.id
-      });
-      return;
+      const jsonData = JSON.parse(responseData);
+      if (jsonData?.response) {
+        const sentMsg = await bot.sendMessage(chatId, jsonData.response, { reply_to_message_id: messageId });
+        global.client.replies.set(sentMsg.message_id, { meta: meta, type: "edit" });
+      } else {
+        await bot.sendMessage(chatId, "❌ No valid response from the API", { reply_to_message_id: messageId });
+      }
+    } else {
+      await bot.sendMessage(chatId, "❌ Unexpected response type", { reply_to_message_id: messageId });
     }
-
-    // Otherwise, attempt to read the stream as text and parse as JSON.
-    let responseData = '';
-    for await (const chunk of response.data) {
-      responseData += chunk.toString();
-    }
-
-    const jsonData = JSON.parse(responseData);
-    if (jsonData && jsonData.response) {
-      const sentMsg = await bot.sendMessage(chatId, jsonData.response);
-      global.client.replies.set(sentMsg.message_id, {
-        meta: meta,
-        command: meta.name,
-        author: msg.from.id
-      });
-      return;
-    }
-
-    return bot.sendMessage(chatId, "❌ No valid response from the API");
-
   } catch (error) {
     console.error("Edit command error:", error);
-    return bot.sendMessage(chatId, "❌ Failed to process your request. Please try again later.");
+    await bot.sendMessage(chatId, "❌ Failed to process your request. Please try again later.", { reply_to_message_id: messageId });
   }
 }
 
-async function onStart({ bot, chatId, msg, args }) {
-  // Ensure the command message is a reply to an image.
-  if (!msg.reply_to_message) {
-    return bot.sendMessage(chatId, "❌ Please reply to an image to edit it.");
+/**
+ * Handles the initial command execution when a user invokes /edit2.
+ */
+async function onStart({ bot, msg, chatId, args }) {
+  if (!msg.reply_to_message || !msg.reply_to_message.photo) {
+    return await bot.sendMessage(chatId, "❌ Please reply to an image to edit it.", { reply_to_message_id: msg.message_id });
   }
-  await handleEdit({ bot, chatId, msg, args });
+
+  const fileId = msg.reply_to_message.photo[msg.reply_to_message.photo.length - 1].file_id;
+  const fileUrl = await bot.getFileLink(fileId);
+  const prompt = args.join(" ") || "What is this";
+
+  await handleEdit(bot, chatId, msg.message_id, fileUrl, prompt);
 }
 
-async function onReply({ bot, chatId, msg, args = [] }) {
-  // When the user replies to the bot's edited photo, run the edit again.
-  await handleEdit({ bot, chatId, msg, args });
+/**
+ * Handles replies to the bot's messages for further image edits.
+ */
+async function onReply({ bot, msg, chatId, data }) {
+  if (data.type === "edit") {
+    if (!msg.reply_to_message || !msg.reply_to_message.photo) {
+      return await bot.sendMessage(chatId, "❌ Please reply to an image to edit it.", { reply_to_message_id: msg.message_id });
+    }
+
+    const fileId = msg.reply_to_message.photo[msg.reply_to_message.photo.length - 1].file_id;
+    const fileUrl = await bot.getFileLink(fileId);
+    const prompt = msg.text || "What is this";
+
+    await handleEdit(bot, chatId, msg.message_id, fileUrl, prompt);
+  }
 }
 
 module.exports = { meta, onStart, onReply };

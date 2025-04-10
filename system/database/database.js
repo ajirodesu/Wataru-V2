@@ -10,7 +10,7 @@ const db = new sqlite3.Database(dbFilePath, (err) => {
   else console.log("Connected to Wataru database.");
 });
 
-// Create 2 tables: one for users and one for groups.
+// Create the required tables.
 db.serialize(() => {
   // Users table: includes coin_balance, level, message_count for rankup, and banned status.
   db.run(`
@@ -39,6 +39,18 @@ db.serialize(() => {
       banned INTEGER DEFAULT 0,
       onlyAdminBox INTEGER DEFAULT 0,
       hideNotiMessageOnlyAdminBox INTEGER DEFAULT 0
+    )
+  `);
+
+  // Warns table: stores one row per warning.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS warns (
+      group_id INTEGER,
+      user_id INTEGER,
+      reason TEXT,
+      dateTime TEXT,
+      warnBy INTEGER,
+      PRIMARY KEY (group_id, user_id, dateTime)
     )
   `);
 });
@@ -158,6 +170,7 @@ async function banGroupData() {
 /*============================
   COIN FUNCTIONS
 ============================*/
+
 // Add coins to a user's balance.
 async function addCoin(userId, coinAmount) {
   try {
@@ -200,6 +213,7 @@ async function coinData() {
 /*============================
   RANK FUNCTIONS
 ============================*/
+
 // Retrieve rank data (returns user_id, level, and message_count).
 async function rankData() {
   try {
@@ -209,7 +223,7 @@ async function rankData() {
   }
 }
 
-// Helper: update a user’s level and message count.
+// Update a user’s level and message count.
 async function updateUserRank(userId, newLevel, newMessageCount) {
   try {
     await runQuery("UPDATE users SET level = ?, message_count = ? WHERE user_id = ?", [newLevel, newMessageCount, userId]);
@@ -218,7 +232,7 @@ async function updateUserRank(userId, newLevel, newMessageCount) {
   }
 }
 
-// Helper: increment a user's message count by 1.
+// Increment a user's message count by 1.
 async function incrementMessageCount(userId) {
   try {
     await runQuery("UPDATE users SET message_count = message_count + 1 WHERE user_id = ?", [userId]);
@@ -228,8 +242,9 @@ async function incrementMessageCount(userId) {
 }
 
 /*============================
-  USER FUNCTIONS (COMPLETE DATA)
+  USER FUNCTIONS
 ============================*/
+
 // Upsert (insert or update) user data.
 async function upsertUser(userData) {
   try {
@@ -283,8 +298,9 @@ async function getAllUsers() {
 }
 
 /*============================
-  GROUP FUNCTIONS (COMPLETE DATA & RULES)
+  GROUP FUNCTIONS
 ============================*/
+
 // Upsert (insert or update) group data.
 async function upsertGroup(groupData) {
   try {
@@ -359,8 +375,82 @@ async function getAllGroups() {
 }
 
 /*============================
-  MODULE EXPORTS
+  WARN FUNCTIONS
 ============================*/
+
+// Add a warning for a user in a group.
+async function addWarn(groupId, userId, reason, dateTime, warnBy) {
+  try {
+    await runQuery(
+      "INSERT INTO warns (group_id, user_id, reason, dateTime, warnBy) VALUES (?, ?, ?, ?, ?)",
+      [groupId, userId, reason, dateTime, warnBy]
+    );
+  } catch (error) {
+    console.error("Error adding warn:", error);
+  }
+}
+
+// Get all warnings for a specific user in a group (ordered by time).
+async function getWarnsForUser(groupId, userId) {
+  try {
+    const rows = await allQuery(
+      "SELECT * FROM warns WHERE group_id = ? AND user_id = ? ORDER BY dateTime ASC",
+      [groupId, userId]
+    );
+    return rows;
+  } catch (error) {
+    console.error("Error getting warns for user:", error);
+  }
+}
+
+// Get all warnings for a group.
+async function getWarnsForGroup(groupId) {
+  try {
+    const rows = await allQuery(
+      "SELECT * FROM warns WHERE group_id = ? ORDER BY user_id, dateTime ASC",
+      [groupId]
+    );
+    return rows;
+  } catch (error) {
+    console.error("Error getting warns for group:", error);
+  }
+}
+
+// Remove a specific warning for a user in a group.
+async function removeWarnForUser(groupId, userId, warnIndex) {
+  try {
+    const warns = await getWarnsForUser(groupId, userId);
+    if (!warns || warns.length === 0) return false;
+    if (warnIndex < 0 || warnIndex >= warns.length) return false;
+    const target = warns[warnIndex];
+    await runQuery(
+      "DELETE FROM warns WHERE group_id = ? AND user_id = ? AND dateTime = ?",
+      [groupId, userId, target.dateTime]
+    );
+    return true;
+  } catch (error) {
+    console.error("Error removing warn for user:", error);
+  }
+}
+
+// Remove all warnings for a user in a group.
+async function removeAllWarnsForUser(groupId, userId) {
+  try {
+    await runQuery("DELETE FROM warns WHERE group_id = ? AND user_id = ?", [groupId, userId]);
+  } catch (error) {
+    console.error("Error removing all warns for user:", error);
+  }
+}
+
+// Reset (clear) all warnings in a group.
+async function resetWarnsForGroup(groupId) {
+  try {
+    await runQuery("DELETE FROM warns WHERE group_id = ?", [groupId]);
+  } catch (error) {
+    console.error("Error resetting warns for group:", error);
+  }
+}
+
 module.exports = {
   // Ban functions
   banUser,
@@ -376,7 +466,7 @@ module.exports = {
   // Rank functions
   rankData,
   updateUserRank,
-  incrementMessageCount,  // Export the new helper function.
+  incrementMessageCount,
   // User functions
   upsertUser,
   getUser,
@@ -386,5 +476,12 @@ module.exports = {
   getGroup,
   updateGroupRules,
   updateGroupPrefix,
-  getAllGroups
+  getAllGroups,
+  // Warn functions
+  addWarn,
+  getWarnsForUser,
+  getWarnsForGroup,
+  removeWarnForUser,
+  removeAllWarnsForUser,
+  resetWarnsForGroup
 };

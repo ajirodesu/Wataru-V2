@@ -11,34 +11,46 @@ const meta = {
   ]
 };
 
-async function onStart({ bot, msg, args, chatId }) {
+async function onStart({ bot, msg, args, chatId, db }) {
   try {
     let targetUser;
-    let userPhotos;
 
-    if (args[0] && args[0].startsWith('@')) {
-      try {
-        const chatMembers = await bot.getChatAdministrators(chatId);
+    // Case 1: Command is a reply to another message
+    if (msg.reply_to_message && msg.reply_to_message.from) {
+      targetUser = msg.reply_to_message.from;
+    }
+    // Case 2: Command includes a username argument (e.g., /id @username)
+    else if (args[0] && args[0].startsWith('@')) {
+      const username = args[0].slice(1); // Remove '@' from the username
+      const users = await db.getAllUsers(); // Get all users from the database
+      // Find user with matching username (case-insensitive)
+      const targetUserData = users.find(user => 
+        user.username && user.username.toLowerCase() === username.toLowerCase()
+      );
 
-        const foundMember = chatMembers.find(member => 
-          member.user.username && 
-          '@' + member.user.username.toLowerCase() === args[0].toLowerCase()
-        );
-
-        if (!foundMember) {
-          return bot.sendMessage(chatId, `❌ User ${args[0]} not found in this group.`);
-        }
-
-        targetUser = foundMember.user;
-      } catch (memberError) {
-        console.error('Member search error:', memberError);
-        return bot.sendMessage(chatId, '❌ Unable to find user in the group.');
+      if (!targetUserData) {
+        return bot.sendMessage(chatId, `❌ User @${username} not found.`);
       }
-    } 
+
+      const userId = targetUserData.user_id;
+      // Verify the user is in the group
+      try {
+        const chatMember = await bot.getChatMember(chatId, userId);
+        targetUser = chatMember.user;
+      } catch (error) {
+        if (error.response && error.response.statusCode === 400) {
+          return bot.sendMessage(chatId, `❌ User @${username} is not in this group.`);
+        }
+        throw error; // Re-throw other errors
+      }
+    }
+    // Case 3: No arguments or reply, use the sender's ID
     else {
       targetUser = msg.from;
     }
 
+    // Retrieve user profile photos
+    let userPhotos;
     try {
       userPhotos = await bot.getUserProfilePhotos(targetUser.id);
     } catch (photoError) {
@@ -46,6 +58,7 @@ async function onStart({ bot, msg, args, chatId }) {
       userPhotos = null;
     }
 
+    // Construct user details message
     const userDetails = `
 📋 *User Information*
 
@@ -58,6 +71,7 @@ async function onStart({ bot, msg, args, chatId }) {
 📊 Chat Type: ${msg.chat.type}
     `;
 
+    // Send response with photo if available, otherwise just the text
     if (userPhotos && userPhotos.photos.length > 0) {
       await bot.sendPhoto(chatId, userPhotos.photos[0][0].file_id, {
         caption: userDetails,
@@ -71,7 +85,7 @@ async function onStart({ bot, msg, args, chatId }) {
 
   } catch (error) {
     console.error('ID Command Error:', error);
-    bot.sendMessage(chatId, '❌ An error occurred while retrieving ID information.');
+    await bot.sendMessage(chatId, '❌ An error occurred while retrieving ID information.');
   }
 };
 
