@@ -22,7 +22,7 @@ const meta = {
  */
 async function handleEdit(bot, chatId, messageId, fileUrl, prompt) {
   try {
-    const apiUrl = `https://www.noobs-api.rf.gd/dipto/edit?url=${encodeURIComponent(fileUrl)}&prompt=${encodeURIComponent(prompt)}`;
+    const apiUrl = `${global.api.dipto}/dipto/edit?url=${encodeURIComponent(fileUrl)}&prompt=${encodeURIComponent(prompt)}`;
     const response = await axios.get(apiUrl, {
       responseType: 'stream',
       validateStatus: () => true

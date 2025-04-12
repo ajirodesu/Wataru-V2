@@ -59,7 +59,7 @@ const clear = async () => {
 };
 
 /**
- * Watches the cache directory for changes and clears it after a 5-second debounce.
+ * Watches the cache directory for changes and clears it after a 30-second debounce.
  * Retries on watcher errors.
  */
 const watch = async () => {
@@ -67,7 +67,7 @@ const watch = async () => {
     await create(); // Ensure directory exists
     const watcher = fs.watch(cacheDir, (eventType, filename) => {
       if (eventType === 'rename' && filename) {
-        // Debounce: clear existing timeout and set a new one
+        // Debounce: clear existing timeout and set a new one for 30 seconds
         if (clearTimeoutId) {
           clearTimeout(clearTimeoutId);
         }
@@ -81,7 +81,7 @@ const watch = async () => {
           } catch (err) {
             console.error(`Error reading cache directory: ${err.message}`);
           }
-        }, 5000);
+        }, 30000);
       }
     });
 
@@ -112,4 +112,4 @@ module.exports = {
   create,
   clear,
   watch,
-}; 
+};

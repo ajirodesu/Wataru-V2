@@ -1,18 +1,18 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Define the path for the database file (for example, "wataru.db")
+// Define the path for the database file (e.g., "wataru.db")
 const dbFilePath = path.join(__dirname, 'wataru.db');
 
-// Open (or create) the SQLite database.
+// Open (or create) the SQLite database
 const db = new sqlite3.Database(dbFilePath, (err) => {
   if (err) console.error("Error opening database:", err);
   else console.log("Connected to Wataru database.");
 });
 
-// Create the required tables.
+// Create the required tables
 db.serialize(() => {
-  // Users table: includes coin_balance, level, message_count for rankup, and banned status.
+  // Users table: includes coin_balance, level, message_count for rankup, and banned status
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       user_id INTEGER PRIMARY KEY,
@@ -28,7 +28,7 @@ db.serialize(() => {
     )
   `);
 
-  // Groups table.
+  // Groups table: includes badwords management fields
   db.run(`
     CREATE TABLE IF NOT EXISTS groups (
       group_id INTEGER PRIMARY KEY,
@@ -38,11 +38,14 @@ db.serialize(() => {
       prefix TEXT DEFAULT '',
       banned INTEGER DEFAULT 0,
       onlyAdminBox INTEGER DEFAULT 0,
-      hideNotiMessageOnlyAdminBox INTEGER DEFAULT 0
+      hideNotiMessageOnlyAdminBox INTEGER DEFAULT 0,
+      badwords_enabled INTEGER DEFAULT 0,
+      badwords_words TEXT,
+      badwords_violations TEXT
     )
   `);
 
-  // Warns table: stores one row per warning.
+  // Warns table: stores one row per warning
   db.run(`
     CREATE TABLE IF NOT EXISTS warns (
       group_id INTEGER,
@@ -53,9 +56,17 @@ db.serialize(() => {
       PRIMARY KEY (group_id, user_id, dateTime)
     )
   `);
+
+  // Busy table: store do not disturb (busy) status for users
+  db.run(`
+    CREATE TABLE IF NOT EXISTS busy (
+      user_id INTEGER PRIMARY KEY,
+      reason TEXT
+    )
+  `);
 });
 
-// Helper functions to run queries using Promises.
+// Helper functions to run queries using Promises
 function runQuery(query, params = []) {
   return new Promise((resolve, reject) => {
     db.run(query, params, function (error) {
@@ -87,7 +98,7 @@ function allQuery(query, params = []) {
   BAN FUNCTIONS (USERS & GROUPS)
 ============================*/
 
-// Ban a user by setting banned = 1.
+// Ban a user by setting banned = 1
 async function banUser(userId) {
   try {
     if (!userId || isNaN(userId)) return false;
@@ -107,7 +118,7 @@ async function banUser(userId) {
   }
 }
 
-// Ban a group by setting banned = 1.
+// Ban a group by setting banned = 1
 async function banGroup(groupId) {
   try {
     if (!groupId || isNaN(groupId)) return false;
@@ -127,7 +138,7 @@ async function banGroup(groupId) {
   }
 }
 
-// Remove a banned user.
+// Remove a banned user
 async function removeBanUser(userId) {
   try {
     if (!userId || isNaN(userId)) return;
@@ -137,7 +148,7 @@ async function removeBanUser(userId) {
   }
 }
 
-// Remove a banned group.
+// Remove a banned group
 async function removeBanGroup(groupId) {
   try {
     if (!groupId || isNaN(groupId)) return;
@@ -147,7 +158,7 @@ async function removeBanGroup(groupId) {
   }
 }
 
-// Retrieve all banned user IDs.
+// Retrieve all banned user IDs
 async function banUserData() {
   try {
     const rows = await allQuery("SELECT user_id FROM users WHERE banned = 1", []);
@@ -157,7 +168,7 @@ async function banUserData() {
   }
 }
 
-// Retrieve all banned group IDs.
+// Retrieve all banned group IDs
 async function banGroupData() {
   try {
     const rows = await allQuery("SELECT group_id FROM groups WHERE banned = 1", []);
@@ -171,7 +182,7 @@ async function banGroupData() {
   COIN FUNCTIONS
 ============================*/
 
-// Add coins to a user's balance.
+// Add coins to a user's balance
 async function addCoin(userId, coinAmount) {
   try {
     if (!userId || isNaN(userId) || isNaN(coinAmount)) return;
@@ -189,7 +200,7 @@ async function addCoin(userId, coinAmount) {
   }
 }
 
-// Remove coins from a user's balance.
+// Remove coins from a user's balance
 async function removeCoin(userId, coinAmount) {
   try {
     if (!userId || isNaN(userId) || isNaN(coinAmount)) return;
@@ -201,7 +212,7 @@ async function removeCoin(userId, coinAmount) {
   }
 }
 
-// Retrieve coin data.
+// Retrieve coin data
 async function coinData() {
   try {
     return await allQuery("SELECT user_id, coin_balance FROM users", []);
@@ -214,7 +225,7 @@ async function coinData() {
   RANK FUNCTIONS
 ============================*/
 
-// Retrieve rank data (returns user_id, level, and message_count).
+// Retrieve rank data (returns user_id, level, and message_count)
 async function rankData() {
   try {
     return await allQuery("SELECT user_id, level, message_count FROM users", []);
@@ -223,7 +234,7 @@ async function rankData() {
   }
 }
 
-// Update a user’s level and message count.
+// Update a user’s level and message count
 async function updateUserRank(userId, newLevel, newMessageCount) {
   try {
     await runQuery("UPDATE users SET level = ?, message_count = ? WHERE user_id = ?", [newLevel, newMessageCount, userId]);
@@ -232,7 +243,7 @@ async function updateUserRank(userId, newLevel, newMessageCount) {
   }
 }
 
-// Increment a user's message count by 1.
+// Increment a user's message count by 1
 async function incrementMessageCount(userId) {
   try {
     await runQuery("UPDATE users SET message_count = message_count + 1 WHERE user_id = ?", [userId]);
@@ -245,7 +256,7 @@ async function incrementMessageCount(userId) {
   USER FUNCTIONS
 ============================*/
 
-// Upsert (insert or update) user data.
+// Upsert (insert or update) user data
 async function upsertUser(userData) {
   try {
     const existing = await getQuery("SELECT * FROM users WHERE user_id = ?", [userData.user_id]);
@@ -279,7 +290,7 @@ async function upsertUser(userData) {
   }
 }
 
-// Retrieve a single user's data.
+// Retrieve a single user's data
 async function getUser(userId) {
   try {
     return await getQuery("SELECT * FROM users WHERE user_id = ?", [userId]);
@@ -288,7 +299,7 @@ async function getUser(userId) {
   }
 }
 
-// Retrieve all users.
+// Retrieve all users
 async function getAllUsers() {
   try {
     return await allQuery("SELECT * FROM users", []);
@@ -297,17 +308,26 @@ async function getAllUsers() {
   }
 }
 
+// Retrieve a user by username (assumes usernames are stored without the '@' symbol)
+async function getUserByUsername(username) {
+  try {
+    return await getQuery("SELECT * FROM users WHERE username = ?", [username]);
+  } catch (error) {
+    console.error("Error retrieving user by username:", error);
+  }
+}
+
 /*============================
   GROUP FUNCTIONS
 ============================*/
 
-// Upsert (insert or update) group data.
+// Upsert (insert or update) group data
 async function upsertGroup(groupData) {
   try {
     const existing = await getQuery("SELECT * FROM groups WHERE group_id = ?", [groupData.group_id]);
     if (existing) {
       await runQuery(
-        "UPDATE groups SET title = ?, description = ?, rules = ?, prefix = ?, banned = ?, onlyAdminBox = ?, hideNotiMessageOnlyAdminBox = ? WHERE group_id = ?",
+        "UPDATE groups SET title = ?, description = ?, rules = ?, prefix = ?, banned = ?, onlyAdminBox = ?, hideNotiMessageOnlyAdminBox = ?, badwords_enabled = ?, badwords_words = ?, badwords_violations = ? WHERE group_id = ?",
         [
           groupData.title || '',
           groupData.description || '',
@@ -316,20 +336,27 @@ async function upsertGroup(groupData) {
           groupData.banned || 0,
           groupData.onlyAdminBox || 0,
           groupData.hideNotiMessageOnlyAdminBox || 0,
+          groupData.badwords_enabled || 0,
+          groupData.badwords_words || '[]',
+          groupData.badwords_violations || '{}',
           groupData.group_id
         ]
       );
     } else {
       await runQuery(
-        "INSERT INTO groups (group_id, title, description, rules, prefix, banned, onlyAdminBox, hideNotiMessageOnlyAdminBox) VALUES (?, ?, ?, ?, ?, 0, ?, ?)",
+        "INSERT INTO groups (group_id, title, description, rules, prefix, banned, onlyAdminBox, hideNotiMessageOnlyAdminBox, badwords_enabled, badwords_words, badwords_violations) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           groupData.group_id,
           groupData.title || '',
           groupData.description || '',
           groupData.rules || '',
           groupData.prefix || '',
+          groupData.banned || 0,
           groupData.onlyAdminBox || 0,
-          groupData.hideNotiMessageOnlyAdminBox || 0
+          groupData.hideNotiMessageOnlyAdminBox || 0,
+          groupData.badwords_enabled || 0,
+          groupData.badwords_words || '[]',
+          groupData.badwords_violations || '{}'
         ]
       );
     }
@@ -338,7 +365,7 @@ async function upsertGroup(groupData) {
   }
 }
 
-// Retrieve a single group's data.
+// Retrieve a single group's data
 async function getGroup(groupId) {
   try {
     return await getQuery("SELECT * FROM groups WHERE group_id = ?", [groupId]);
@@ -347,7 +374,7 @@ async function getGroup(groupId) {
   }
 }
 
-// Update a group's rules.
+// Update a group's rules
 async function updateGroupRules(groupId, rules) {
   try {
     await runQuery("UPDATE groups SET rules = ? WHERE group_id = ?", [rules, groupId]);
@@ -356,7 +383,7 @@ async function updateGroupRules(groupId, rules) {
   }
 }
 
-// Update a group's prefix.
+// Update a group's prefix
 async function updateGroupPrefix(groupId, newPrefix) {
   try {
     await runQuery("UPDATE groups SET prefix = ? WHERE group_id = ?", [newPrefix, groupId]);
@@ -365,7 +392,7 @@ async function updateGroupPrefix(groupId, newPrefix) {
   }
 }
 
-// Retrieve all groups.
+// Retrieve all groups
 async function getAllGroups() {
   try {
     return await allQuery("SELECT * FROM groups", []);
@@ -378,7 +405,7 @@ async function getAllGroups() {
   WARN FUNCTIONS
 ============================*/
 
-// Add a warning for a user in a group.
+// Add a warning for a user in a group
 async function addWarn(groupId, userId, reason, dateTime, warnBy) {
   try {
     await runQuery(
@@ -390,7 +417,7 @@ async function addWarn(groupId, userId, reason, dateTime, warnBy) {
   }
 }
 
-// Get all warnings for a specific user in a group (ordered by time).
+// Get all warnings for a specific user in a group (ordered by time)
 async function getWarnsForUser(groupId, userId) {
   try {
     const rows = await allQuery(
@@ -403,7 +430,7 @@ async function getWarnsForUser(groupId, userId) {
   }
 }
 
-// Get all warnings for a group.
+// Get all warnings for a group
 async function getWarnsForGroup(groupId) {
   try {
     const rows = await allQuery(
@@ -416,7 +443,7 @@ async function getWarnsForGroup(groupId) {
   }
 }
 
-// Remove a specific warning for a user in a group.
+// Remove a specific warning for a user in a group
 async function removeWarnForUser(groupId, userId, warnIndex) {
   try {
     const warns = await getWarnsForUser(groupId, userId);
@@ -433,7 +460,7 @@ async function removeWarnForUser(groupId, userId, warnIndex) {
   }
 }
 
-// Remove all warnings for a user in a group.
+// Remove all warnings for a user in a group
 async function removeAllWarnsForUser(groupId, userId) {
   try {
     await runQuery("DELETE FROM warns WHERE group_id = ? AND user_id = ?", [groupId, userId]);
@@ -442,12 +469,46 @@ async function removeAllWarnsForUser(groupId, userId) {
   }
 }
 
-// Reset (clear) all warnings in a group.
+// Reset (clear) all warnings in a group
 async function resetWarnsForGroup(groupId) {
   try {
     await runQuery("DELETE FROM warns WHERE group_id = ?", [groupId]);
   } catch (error) {
     console.error("Error resetting warns for group:", error);
+  }
+}
+
+/*============================
+  BUSY FUNCTIONS
+============================*/
+
+// Set (or update) busy status for a user
+async function setBusy(userId, reason) {
+  try {
+    await runQuery(
+      "INSERT OR REPLACE INTO busy (user_id, reason) VALUES (?, ?)",
+      [userId, reason]
+    );
+  } catch (error) {
+    console.error("Error setting busy status:", error);
+  }
+}
+
+// Remove busy status for a user
+async function removeBusy(userId) {
+  try {
+    await runQuery("DELETE FROM busy WHERE user_id = ?", [userId]);
+  } catch (error) {
+    console.error("Error removing busy status:", error);
+  }
+}
+
+// Get busy status for a user
+async function getBusy(userId) {
+  try {
+    return await getQuery("SELECT reason FROM busy WHERE user_id = ?", [userId]);
+  } catch (error) {
+    console.error("Error retrieving busy status:", error);
   }
 }
 
@@ -459,29 +520,45 @@ module.exports = {
   removeBanGroup,
   banUserData,
   banGroupData,
+
   // Coin functions
   addCoin,
   removeCoin,
   coinData,
+
   // Rank functions
   rankData,
   updateUserRank,
   incrementMessageCount,
+
   // User functions
   upsertUser,
   getUser,
   getAllUsers,
+  getUserByUsername,
+
   // Group functions
   upsertGroup,
   getGroup,
   updateGroupRules,
   updateGroupPrefix,
   getAllGroups,
+
   // Warn functions
   addWarn,
   getWarnsForUser,
   getWarnsForGroup,
   removeWarnForUser,
   removeAllWarnsForUser,
-  resetWarnsForGroup
+  resetWarnsForGroup,
+
+  // Busy functions
+  setBusy,
+  removeBusy,
+  getBusy,
+
+  // Helper functions
+  runQuery,
+  getQuery,
+  allQuery
 };

@@ -6,7 +6,7 @@ const meta = {
   author: "NTKhang",
   prefix: "both",
   category: "moderation",
-  type: "admin",
+  type: "administrator",
   cooldown: 5,
   guide: [
     "@username <reason>         - Warn a member with an optional reason",
@@ -228,4 +228,4 @@ async function onStart({ bot, msg, args, db, wataru }) {
   }
 }
 
-module.exports = { meta, onStart };
+module.exports = { meta, onStart }; 
