@@ -3,7 +3,7 @@ const meta = {
   version: "1.0.0",
   aliases: [],
   description: "Claim your daily reward of lycoris coin",
-  author: "leiamnash",
+  author: "AjiroDesu",
   prefix: "both",
   category: "economy",
   type: "anyone",
