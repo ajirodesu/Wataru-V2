@@ -10,7 +10,7 @@ const meta = {
   category: "info"
 };
 
-async function onStart({ bot, chatId, msg, args }) {
+async function onStart({ bot, wataru, chatId, msg, args }) {
   // Retrieve the user's actual name (combine first and last name if available)
   let userName = msg.from.first_name;
   if (msg.from.last_name) {
@@ -38,6 +38,6 @@ async function onStart({ bot, chatId, msg, args }) {
 
   // Send the personalized uptime message to the chat
   const message = `Greetings Master ${userName}, I've been running for ${uptimeStr}.`;
-  await bot.sendMessage(chatId, message);
+  await wataru.reply(message);
 };
 module.exports = { meta, onStart };
