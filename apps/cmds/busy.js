@@ -45,6 +45,9 @@ async function onChat({ bot, msg, db, wataru }) {
     // First, check if the message is a reply.
     if (msg.reply_to_message) {
       const targetId = msg.reply_to_message.from.id;
+      // Do not notify if the user replied to their own message.
+      if (targetId === msg.from.id) return;
+
       const busyData = await db.getBusy(targetId);
       if (busyData) {
         const name = msg.reply_to_message.from.first_name || "This user";
@@ -63,6 +66,9 @@ async function onChat({ bot, msg, db, wataru }) {
         // Case 1: When a text_mention is used (contains a user object)
         if (entity.type === 'text_mention' && entity.user) {
           const targetId = entity.user.id;
+          // Skip if a user mentions themselves.
+          if (targetId === msg.from.id) continue;
+
           const busyData = await db.getBusy(targetId);
           if (busyData) {
             const name = entity.user.first_name || "This user";
@@ -78,10 +84,13 @@ async function onChat({ bot, msg, db, wataru }) {
           // Extract the username from the message text.
           const username = msg.text.substring(entity.offset, entity.offset + entity.length).replace('@', '');
           // Look up the user by username from your database.
-          // (Ensure that you have implemented db.getUserByUsername to return a user object.)
+          // (Assumes db.getUserByUsername returns a user object.)
           const userRecord = await db.getUserByUsername(username);
           if (userRecord) {
             const targetId = userRecord.user_id;
+            // Skip if the mentioned username is the same as the sender.
+            if (targetId === msg.from.id) continue;
+
             const busyData = await db.getBusy(targetId);
             if (busyData) {
               const name = userRecord.first_name || username;

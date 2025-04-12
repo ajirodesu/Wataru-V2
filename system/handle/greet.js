@@ -1,6 +1,6 @@
-const moment = require("moment-timezone");
+const moment = require('moment-timezone');
 
-// In‑memory cooldown tracker (per user)
+// In-memory cooldown tracker (per user)
 const cooldowns = {};
 
 /**
@@ -15,6 +15,9 @@ const cooldowns = {};
  */
 exports.greet = async function({ bot, wataru, msg, args }) {
   try {
+    // Only process messages from group or supergroup chats
+    if (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup') return;
+
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     if (!msg.text) return;
@@ -24,7 +27,7 @@ exports.greet = async function({ bot, wataru, msg, args }) {
     // If the message starts with the prefix, assume it's a command.
     if (text.startsWith(global.config.prefix)) return;
 
-    // Also check if the first token matches a no‑prefix or "both" command.
+    // Also check if the first token matches a no-prefix or "both" command.
     const tokens = text.split(/\s+/);
     if (tokens.length > 0) {
       const firstToken = tokens[0].toLowerCase();
@@ -78,7 +81,7 @@ exports.greet = async function({ bot, wataru, msg, args }) {
       currentTime >= "18:00:00" && currentTime <= "19:59:59" ? "Let's eat dinner" :
       "Good evening";
 
-    // Day‑of‑week greeting options.
+    // Day-of-week greeting options.
     let dayGreetingOptions = [];
     const upperLong = formattedLong.toUpperCase();
     if (upperLong.includes("SUN")) {
